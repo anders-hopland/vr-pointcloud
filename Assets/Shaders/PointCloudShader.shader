@@ -2,7 +2,9 @@
 {
 	Properties
 	{
+		_TriggerPress("triggerpress", Int) = 0 // 0 for off, 1 for on
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
+		_EditCol("editCol", Color) = (0.7, 0.2, 0.9, 0)
 		_EditRadius("editradius", Float) = 1.0
 	}
 		SubShader
@@ -17,7 +19,9 @@
 
 			float4 _EditPos;
 			float _EditRadius;
-
+			int _TriggerPress;
+			float4 _EditCol;
+		
 			struct appdata
 			{
 				uint ix : SV_VertexID;
@@ -41,11 +45,12 @@
 				float4 position = float4(vertsBuf[v.ix].xyz, 0);
 				float4 normal = float4(normsBuf[v.ix].xyz, 0);
 				
-				// Will later be used for "painting"
-				if (distance(position.xyz, _EditPos.xyz) > _EditRadius) {
-					colsBuf[v.ix] = float4(1, 0, 0, 0);
+				if (_TriggerPress == 1)
+				{
+					if (distance(position.xyz, _EditPos.xyz) < _EditRadius) {
+						colsBuf[v.ix] = _EditCol;
+					}
 				}
-
 				o.vertex = position;
 				o.normal = normal;
 				o.col = colsBuf[v.ix];
@@ -60,8 +65,7 @@
 				g2f v3;
 				g2f v4;
 
-				float radius = 0.06f;
-
+				float radius = 0.006f;
 				float4 base = UnityObjectToClipPos(input[0].vertex);
 
 				// Should fix normals later

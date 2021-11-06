@@ -6,7 +6,10 @@ using UnityEngine;
 
 public class StartScript : MonoBehaviour
 	{
-	// Start is called before the first frame update
+
+	internal static GameObject selectedObj;
+	internal static Material selectedObjMat;
+
 	internal ComputeBuffer vertBuffer;
 	internal ComputeBuffer normBuffer;
 	internal ComputeBuffer colBuffer;
@@ -17,18 +20,21 @@ public class StartScript : MonoBehaviour
 		var vertices = new Vector3[ret.points.Length];
 		var colors = new Color[ret.points.Length];
 		var indices = new int[ret.points.Length];
+		Bounds bounds = new Bounds(Vector3.zero, Vector3.zero);
 		if (ret.points.Length > 0)
 			{
+			// Reinitialize if we see that we have points
+			bounds = new Bounds(ret.points[0].xyz, Vector3.zero);
 			for (int i = 0; i < vertices.Length; i++)
 				{
-				vertices[i] = ret.points[i].xyz;
+				vertices[i] = ret.points[i].xyz * 0.1f;
+				bounds.Encapsulate(vertices[i]);
 				colors[i] = ret.points[i].col;
 				indices[i] = i;
 				}
 			}
 
 		var normals = getNormals(vertices);
-
 
 		vertBuffer = new ComputeBuffer(vertices.Length, 4 * 3); // 4 bytes per float, 3 floats
 		vertBuffer.SetData(vertices);
@@ -42,10 +48,13 @@ public class StartScript : MonoBehaviour
 		colBuffer.SetData(colors);
 		Graphics.SetRandomWriteTarget(3, colBuffer);
 
-		GameObject go = GameObject.CreatePrimitive(PrimitiveType.Plane);
+		GameObject go = GameObject.CreatePrimitive(PrimitiveType.Plane); // Uses a primitive to get meshfilter and meshrenderer
+		selectedObj = go;
 		go.GetComponent<MeshFilter>().mesh.SetVertices(vertices);
 		go.GetComponent<MeshFilter>().mesh.SetIndices(indices, MeshTopology.Points, 0);
-		go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
+		selectedObjMat = new Material(Shader.Find("Custom/PointCloudShader"));
+		go.GetComponent<MeshRenderer>().material = selectedObjMat;
+		go.transform.parent = this.transform.parent;
 		}
 
 	// Update is called once per frame
