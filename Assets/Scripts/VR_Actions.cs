@@ -20,9 +20,10 @@ public class VR_Actions : MonoBehaviour
 		rightHandGo = GameObject.Find("Controller (right)");
 		sceneRoot = GameObject.Find("SceneElemRoot");
 		editSphere = GameObject.Find("EditSphere");
+		editSphereRad = editSphere.transform.localScale.x / 2f;
 		}
 
-	internal float editSphereRad = 0.2f;
+	internal float editSphereRad = 1f;
 	void Update()
 		{
 		updateShaderParams();
@@ -86,7 +87,7 @@ public class VR_Actions : MonoBehaviour
 		{
 		if (StartScript.selectedObj == null) return;
 		if (StartScript.selectedObjMat == null) return;
-		StartScript.selectedObjMat.SetFloat("_EditRadius", editSphereRad);
+		StartScript.selectedObjMat.SetFloat("_EditRadius", editSphereRad * (1 / sceneRoot.transform.localScale.x));
 		var newEditPos = StartScript.selectedObj.transform.InverseTransformPoint(editSphere.transform.position);
 		StartScript.selectedObjMat.SetVector("_EditPos", newEditPos);
 		StartScript.selectedObjMat.SetInt ("_TriggerPress", SteamVR_Input.GetState("GrabPinch", rightHand) ? 1 : 0);
