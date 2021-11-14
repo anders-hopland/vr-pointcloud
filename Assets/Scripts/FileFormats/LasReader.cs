@@ -83,7 +83,6 @@ public class LasReader
 		int lasFormat = header.pointDataFormat;
 
 		byte[] bytes = new byte[header.pointDataLength];
-		//int curOffset = header.headerSize;
 		file.Position = header.offsetToData;
 
 
@@ -94,8 +93,6 @@ public class LasReader
 			else if (header.pointDataFormat == 1) lasPoints[i] = getLasPointV1(bytes);
 			else if (header.pointDataFormat == 2) lasPoints[i] = getLasPointV2(bytes);
 			else if (header.pointDataFormat == 3) lasPoints[i] = getLasPointV3(bytes);
-
-			//curOffset += (int)header.numPoints;
 			}
 
 		for (int i = 0; i < lasPoints.Length; i++)
@@ -190,13 +187,6 @@ public class LasReader
 			BitConverter.ToUInt16(bytes, 30),
 			BitConverter.ToUInt16(bytes, 32)
 			);
-
-		return point;
-		}
-
-	private static LasPoint readLasPointFormat1(FileStream file)
-		{
-		LasPoint point = new LasPoint();
 
 		return point;
 		}

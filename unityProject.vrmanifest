@@ -5,7 +5,7 @@
       "app_key": "application.generated.unity.vrpointclouds.exe",
       "launch_type": "url",
       "url": "steam://launch/",
-      "action_manifest_path": "C:\\Users\\Anders\\Documents\\git_projects\\vr-pointcloud\\Assets\\StreamingAssets\\SteamVR\\actions.json",
+      "action_manifest_path": "C:\\Users\\Anders\\git_projects\\vr-pointcloud\\Assets\\StreamingAssets\\SteamVR\\actions.json",
       "strings": {
         "en_us": {
           "name": "VR Point Clouds [Testing]"

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
@@ -12,6 +13,7 @@ public class VR_Actions : MonoBehaviour
 	internal GameObject rightHandGo;
 	internal GameObject sceneRoot;
 	internal GameObject editSphere;
+	internal List<GameObject> menuItems;
 	void Start()
 		{
 		leftHand = SteamVR_Input_Sources.LeftHand;
@@ -21,11 +23,22 @@ public class VR_Actions : MonoBehaviour
 		sceneRoot = GameObject.Find("SceneElemRoot");
 		editSphere = GameObject.Find("EditSphere");
 		editSphereRad = editSphere.transform.localScale.x / 2f;
+
+		menuItems = new List<GameObject>();
+		GameObject go = GameObject.Find("ButtonLayer1");
+		menuItems.Add(go);
+		go = GameObject.Find("ButtonLayer2");
+		menuItems.Add(go);
+		go = GameObject.Find("nextFrame");
+		menuItems.Add(go);
+		go = GameObject.Find("prevFrame");
+		menuItems.Add(go);
 		}
 
 	internal float editSphereRad = 1f;
 	void Update()
 		{
+		checkMenuInteraction();
 		updateShaderParams();
 		checkDragMove();
 		checkResize();
@@ -34,15 +47,65 @@ public class VR_Actions : MonoBehaviour
 	internal bool grabbingRight = false;
 	internal bool grabbingLeft = false;
 	internal float scaleDist;
+	internal bool checkFirstResize = true;
+	internal bool triggerMenuInteraction = false;
+	internal void checkMenuInteraction()
+		{
+		bool triggerPressDown = SteamVR_Input.GetStateDown("GrabPinch", rightHand);
+		bool triggerPress = SteamVR_Input.GetState("GrabPinch", rightHand);
+
+		bool menuClick = false;
+		// Check for hover on button
+		foreach (var go in menuItems)
+			{
+			if (editSphere.GetComponent < MeshRenderer>().bounds.Intersects(go.GetComponent<MeshRenderer>().bounds))
+				{
+				go.GetComponent<MeshRenderer>().material.color = Color.white;
+				// Problem with bounds, so multiple buttons can be hit simultanously
+				// Must thus have make sure that we only interact with first hit
+				if (triggerPressDown && !menuClick) 
+					{
+					if (go.name == "ButtonLayer1")
+						{
+						StartScript.setCurLayer(Color.yellow);
+						menuClick = true;
+						}
+					else if (go.name == "ButtonLayer2")
+						{
+						StartScript.setCurLayer(Color.cyan);
+						menuClick = true;
+						}
+					else if (go.name == "nextFrame")
+						{
+						StartScript.nextPointCloud ();
+						menuClick = true;
+						}
+					else if (go.name == "prevFrame")
+						{
+						StartScript.prevPointCloud();
+						menuClick = true;
+						}
+					}
+				}
+			else
+				go.GetComponent<MeshRenderer>().material.color = Color.blue;
+			}
+		}
+
 	internal void checkResize()
 		{
+		if (checkFirstResize)
+			{
+			checkFirstResize = false;
+			Debug.Log("Check first resize");
+			}
 		Vector2 axis;
 		if (!grabbingLeft && !grabbingRight)
 			{
 			axis = SteamVR_Input.GetVector2("joystick", leftHand);
 			if (axis.sqrMagnitude > 0)
 				{
-				sceneRoot.transform.localScale += Vector3.one * axis.x * 0.01f;
+				sceneRoot.transform.localScale += Vector3.one * axis.x * 0.002f;
 				}
 			}
 

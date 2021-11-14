@@ -4,8 +4,8 @@
 	{
 		_TriggerPress("triggerpress", Int) = 0 // 0 for off, 1 for on
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
-		_EditCol("editCol", Color) = (0.7, 0.2, 0.9, 0)
-		_EditRadius("editradius", Float) = 1.0
+		_EditCol("editCol", Color) = (0.95, 0.88, 0.03, 0)
+		_EditRadius("editradius", Float) = 0.015
 	}
 		SubShader
 	{
@@ -45,6 +45,7 @@
 				float4 position = float4(vertsBuf[v.ix].xyz, 0);
 				float4 normal = float4(normsBuf[v.ix].xyz, 0);
 				
+				// Paint / mark point cloud
 				if (_TriggerPress == 1)
 				{
 					if (distance(position.xyz, _EditPos.xyz) < _EditRadius) {
@@ -65,7 +66,7 @@
 				g2f v3;
 				g2f v4;
 
-				float radius = 0.006f;
+				float radius = 0.002;
 				float4 base = UnityObjectToClipPos(input[0].vertex);
 
 				// Should fix normals later
