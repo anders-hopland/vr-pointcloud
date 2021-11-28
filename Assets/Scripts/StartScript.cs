@@ -5,6 +5,7 @@ using System.IO;
 using UnityEngine;
 using System.Linq;
 using System;
+using SFB;
 
 public class StartScript : MonoBehaviour
 	{
@@ -12,37 +13,32 @@ public class StartScript : MonoBehaviour
 	internal static GameObject selectedObj;
 	internal static Material selectedObjMat;
 	internal static int curLasFileIndex = 0;
-	internal static LasFile[] lasFiles;
+	internal static LasStruct[] lasFiles;
 
 	internal static ComputeBuffer vertBuffer;
 	internal static ComputeBuffer normBuffer;
 	internal static ComputeBuffer colBuffer;
 	void Start()
 		{
-		//var ret = LasReader.readLASFile("C:\\Users\\Anders\\Documents\\36 mill gloes.las");
+		// Open file with filter
+		var extensions = new[] {
+		    new ExtensionFilter("Point Cloud", "las"),
+		};
 
-		string fileNameFilter = "test_pointCloud";
-		var fileNames = Directory.GetFiles("C:\\Users\\Anders\\Downloads\\LidarPointClouds")
-			.Where(x => x.Contains(fileNameFilter) && x.EndsWith(".las")).ToArray();
+		var fileNames = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, true);
+		if (fileNames.Length == 0) return;
+		fileNames = fileNames.Where(x => x.EndsWith(".las")).ToArray();
 
 		// Sorting on filename, filenames should be on the form filnamefilter<1> ... filenameFilter<N>
 		Array.Sort(fileNames);
 
-		lasFiles = new LasFile[fileNames.Length];
+		lasFiles = new LasStruct[fileNames.Length];
 		for (int i = 0; i < fileNames.Length; i++)
 			lasFiles[i] = LasReader.readLASFile(fileNames[i]);
 
-		//var ret = LasReader.readLASFile("C:\\Users\\Anders\\Documents\\1400 k gloes - Cloud.las");
-		//var ret = LasReader.readLASFile("C:\\Users\\Anders\\Documents\\trd15K.las");
-
-		//var normals = getNormals(vertices);
-
+		// Initialize compute buffers
 		vertBuffer = new ComputeBuffer(2 * 1000 * 1000, 4 * 3); // 4 bytes per float, 3 floats		
 		Graphics.SetRandomWriteTarget(1, vertBuffer);
-
-		//normBuffer = new ComputeBuffer(normals.Length, 4 * 3);
-		//normBuffer.SetData(normals);
-		//Graphics.SetRandomWriteTarget(2, normBuffer);
 
 		// Big initial size, as point clouds in sequence can be of variable length
 		colBuffer = new ComputeBuffer(2 * 1000 * 1000, 4 * 4);
@@ -95,7 +91,7 @@ public class StartScript : MonoBehaviour
 		return normals;
 		}
 
-	public static void setPointCloud(LasFile file)
+	public static void setPointCloud(LasStruct file)
 		{
 		var vertices = new Vector3[file.points.Length];
 		var colors = new Color[file.points.Length];
@@ -130,7 +126,7 @@ public class StartScript : MonoBehaviour
 		setPointCloud(lasFiles[curLasFileIndex]);
 		}
 
-	public static void prevPointCloud ()
+	public static void prevPointCloud()
 		{
 		downloadCurPointCloud();
 		if (curLasFileIndex <= 0) return;
@@ -138,8 +134,16 @@ public class StartScript : MonoBehaviour
 		setPointCloud(lasFiles[curLasFileIndex]);
 		}
 
-	private static void downloadCurPointCloud ()
+	internal static Color[] tempColBuffer; // Buffer for intermediate storage of GPU download data
+	private static void downloadCurPointCloud()
 		{
-		// Download data like colors
+		// Download and update color data
+		if (tempColBuffer == null || tempColBuffer.Length < lasFiles[curLasFileIndex].points.Length)
+			{
+			tempColBuffer = new Color[(int)(lasFiles[curLasFileIndex].points.Length * 1.5f)];
+			}
+		colBuffer.GetData(tempColBuffer, 0, 0, lasFiles[curLasFileIndex].points.Length);
+		for (int i = 0; i < lasFiles[curLasFileIndex].points.Length; i++)
+			lasFiles[curLasFileIndex].points[i].col = tempColBuffer[i];
 		}
 	}

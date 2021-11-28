@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public struct LasFile
+public struct LasStruct
 	{
 	public LasHeader header;
 	public LasPoint[] points;

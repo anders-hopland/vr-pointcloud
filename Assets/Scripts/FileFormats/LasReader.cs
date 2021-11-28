@@ -4,10 +4,9 @@ using System.Globalization;
 
 public class LasReader
 	{
-
-	public static LasFile readLASFile(string fileName)
+	public static LasStruct readLASFile(string fileName)
 		{
-		LasFile lasFile = new LasFile();
+		LasStruct lasFile = new LasStruct();
 		if (!File.Exists(fileName)) return lasFile;
 		FileStream fs = File.Open(fileName, FileMode.Open);
 		LasHeader header = readLasHeader(fs);
@@ -85,14 +84,15 @@ public class LasReader
 		byte[] bytes = new byte[header.pointDataLength];
 		file.Position = header.offsetToData;
 
+		// TODO: Chunk reading into e.g 4KB per read
 
 		for (int i = 0; i < lasPoints.Length; i++)
 			{
 			file.Read(bytes, 0, (int)header.pointDataLength);
-			if (header.pointDataFormat == 0) lasPoints[i] = getLasPointV0(bytes);
-			else if (header.pointDataFormat == 1) lasPoints[i] = getLasPointV1(bytes);
-			else if (header.pointDataFormat == 2) lasPoints[i] = getLasPointV2(bytes);
-			else if (header.pointDataFormat == 3) lasPoints[i] = getLasPointV3(bytes);
+			if (lasFormat == 0) lasPoints[i] = getLasPointV0(bytes);
+			else if (lasFormat == 1) lasPoints[i] = getLasPointV1(bytes);
+			else if (lasFormat == 2) lasPoints[i] = getLasPointV2(bytes);
+			else if (lasFormat == 3) lasPoints[i] = getLasPointV3(bytes);
 			}
 
 		for (int i = 0; i < lasPoints.Length; i++)
@@ -105,7 +105,7 @@ public class LasReader
 		return lasPoints;
 		}
 
-	private static LasPoint getLasPointV0 (byte[] bytes)
+	private static LasPoint getLasPointV0(byte[] bytes)
 		{
 		LasPoint ret = new LasPoint();
 		ret.xyz = new UnityEngine.Vector3(
@@ -158,8 +158,8 @@ public class LasReader
 		point.pointSourceId = BitConverter.ToUInt16(bytes, 18);
 
 		point.col = new UnityEngine.Color(
-			BitConverter.ToInt32(bytes, 20),
-			BitConverter.ToInt32(bytes, 22),
+			BitConverter.ToUInt16(bytes, 20),
+			BitConverter.ToUInt16(bytes, 22),
 			BitConverter.ToUInt16(bytes, 24)
 			);
 
