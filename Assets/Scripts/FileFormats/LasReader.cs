@@ -14,6 +14,8 @@ public class LasReader
 
 		lasFile.header = header;
 		lasFile.points = lasPoints;
+		fs.Close();
+
 		return lasFile;
 		}
 
