@@ -48,6 +48,5 @@ namespace Tests
 			Assert.IsTrue(Mathf.Abs((float)file.header.minY - -45.937194f) < 0.001f);
 			Assert.IsTrue(Mathf.Abs((float)file.header.minZ - -17.032073f) < 0.001f);
 			}
-
 		}
 	}

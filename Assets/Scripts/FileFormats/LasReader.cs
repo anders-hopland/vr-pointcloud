@@ -4,6 +4,11 @@ using System.Globalization;
 
 public class LasReader
 	{
+	/// <summary>
+	/// Returns a struct with all relevant data from las file
+	/// </summary>
+	/// <param name="fileName"></param>
+	/// <returns></returns>
 	public static LasStruct readLASFile(string fileName)
 		{
 		LasStruct lasFile = new LasStruct();

@@ -67,22 +67,22 @@ public class VR_Actions : MonoBehaviour
 					{
 					if (go.name == "ButtonLayer1")
 						{
-						StartScript.setCurLayer(Color.yellow);
+						EventHandler.registerEvent(EventHandler.events.setlayer, Color.yellow);
 						menuClick = true;
 						}
 					else if (go.name == "ButtonLayer2")
 						{
-						StartScript.setCurLayer(Color.cyan);
+						EventHandler.registerEvent(EventHandler.events.setlayer, Color.cyan);
 						menuClick = true;
 						}
 					else if (go.name == "nextFrame")
 						{
-						StartScript.nextPointCloud ();
+						EventHandler.registerEvent(EventHandler.events.next);
 						menuClick = true;
 						}
 					else if (go.name == "prevFrame")
 						{
-						StartScript.prevPointCloud();
+						EventHandler.registerEvent(EventHandler.events.prev);
 						menuClick = true;
 						}
 					}
@@ -148,12 +148,11 @@ public class VR_Actions : MonoBehaviour
 
 	internal void updateShaderParams()
 		{
-		if (StartScript.selectedObj == null) return;
-		if (StartScript.selectedObjMat == null) return;
-		StartScript.selectedObjMat.SetFloat("_EditRadius", editSphereRad * (1 / sceneRoot.transform.localScale.x));
-		var newEditPos = StartScript.selectedObj.transform.InverseTransformPoint(editSphere.transform.position);
-		StartScript.selectedObjMat.SetVector("_EditPos", newEditPos);
-		StartScript.selectedObjMat.SetInt ("_TriggerPress", SteamVR_Input.GetState("GrabPinch", rightHand) ? 1 : 0);
+		if (StartScript.display == null) return;
+		var newEditPos = StartScript.display.transform.InverseTransformPoint(editSphere.transform.position);
+		EventHandler.registerEvent(EventHandler.events.seteditpos, newEditPos);
+		EventHandler.registerEvent(EventHandler.events.seteditradius, editSphereRad);
+		EventHandler.registerEvent(EventHandler.events.settriggerpress, SteamVR_Input.GetState("GrabPinch", rightHand));
 		}
 	}
 

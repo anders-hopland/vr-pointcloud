@@ -3,9 +3,11 @@
 	Properties
 	{
 		_TriggerPress("triggerpress", Int) = 0 // 0 for off, 1 for on
+		_HasNormals("hasnormals", Int) = 0 // 0 for off, 1 for on
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
 		_EditCol("editCol", Color) = (0.95, 0.88, 0.03, 0)
 		_EditRadius("editradius", Float) = 0.015
+		_DisplayRadius("displayradius", Float) = 0.005
 	}
 		SubShader
 	{
@@ -17,10 +19,12 @@
 			uniform RWStructuredBuffer<float3> normsBuf : register(u2);
 			uniform RWStructuredBuffer<float4> colsBuf : register(u3);
 
-			float4 _EditPos;
-			float _EditRadius;
 			int _TriggerPress;
+			int _HasNormals;
+			float4 _EditPos;
 			float4 _EditCol;
+			float _EditRadius;
+			float _DisplayRadius;
 		
 			struct appdata
 			{
@@ -66,14 +70,42 @@
 				g2f v3;
 				g2f v4;
 
-				float radius = 0.002;
-				float4 base = UnityObjectToClipPos(input[0].vertex);
+				float radius = _DisplayRadius;
+				float4 normal = input[0].normal;
 
-				// Should fix normals later
-				v1.vertex = base + float4(-radius, -radius, 0, 0);
-				v2.vertex = base + float4(radius, -radius, 0, 0);
-				v3.vertex = base + float4(-radius, radius, 0, 0);
-				v4.vertex = base + float4(radius, radius, 0, 0);
+				if (_HasNormals == 0)
+				{
+					float4 base = UnityObjectToClipPos(input[0].vertex);
+
+					// Should fix normals later
+					v1.vertex = base + float4(-radius, -radius, 0, 0);
+					v2.vertex = base + float4(radius, -radius, 0, 0);
+					v3.vertex = base + float4(-radius, radius, 0, 0);
+					v4.vertex = base + float4(radius, radius, 0, 0);
+				}
+				else
+				{
+					float4 base = input[0].vertex;
+					float3 right = normalize(cross(normal.xyz, float3(1, 0, 1)));
+					//float4 right = float4(1, 0, 0, 0);
+					float3 up = cross(right, normal); // does not need to be normalized
+					//float4 up = float4(0, 1, 0, 0); // does not need to be normalized
+
+					right *= radius;
+					up *= radius;
+
+					// Should fix normals later
+					v1.vertex = base - float4(right.xyz, 0) - float4(up.xyz, 0);
+					v2.vertex = base + float4(right.xyz, 0) - float4(up.xyz, 0);
+					v3.vertex = base - float4(right.xyz, 0) + float4(up.xyz, 0);
+					v4.vertex = base + float4(right.xyz, 0) + float4(up.xyz, 0);
+				}
+				
+
+				v1.vertex = UnityObjectToClipPos(v1.vertex);
+				v2.vertex = UnityObjectToClipPos(v2.vertex);
+				v3.vertex = UnityObjectToClipPos(v3.vertex);
+				v4.vertex = UnityObjectToClipPos(v4.vertex);
 
 				v1.col = input[0].col;
 				v2.col = input[0].col;
@@ -89,7 +121,6 @@
 				triStream.Append(v4);
 				triStream.Append(v3);
 				triStream.RestartStrip();
-
 			}
 
 			fixed4 frag(g2f i) : SV_Target
