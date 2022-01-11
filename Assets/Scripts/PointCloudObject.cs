@@ -111,12 +111,11 @@ public class PointCloudObject : MonoBehaviour
 		Vector3[] normals = new Vector3[file.points.Length];
 		Vector3[] vertices = new Vector3[file.points.Length];
 
-		// Scale down
-		if (file.points.Length > 0)
-			{
-			for (int i = 0; i < vertices.Length; i++)
-				vertices[i] = file.points[i].xyz;
-			}
+
+		if (file.points.Length == 0) return;
+
+		for (int i = 0; i < vertices.Length; i++)
+			vertices[i] = file.points[i].xyz;
 
 		KDTree tree = new KDTree();
 		tree.Build(vertices);
@@ -154,6 +153,7 @@ public class PointCloudObject : MonoBehaviour
 			var detY = xx * zz - xz * xz;
 			var detZ = xx * yy - xy * xy;
 
+			// Find max determinant
 			var detMax = Mathf.Max(detX, Mathf.Max(detY, detZ));
 			if (detMax <= 0) continue; // Cannot create a plane
 
@@ -181,7 +181,7 @@ public class PointCloudObject : MonoBehaviour
 	internal void setEditPos(Vector3 pos)
 		{
 		if (mr == null) return;
-		mr.material.SetVector("_EditPos", pos); 
+		mr.material.SetVector("_EditPos", pos);
 		}
 	internal void setEditRad(float rad)
 		{
@@ -224,12 +224,12 @@ public class PointCloudObject : MonoBehaviour
 			files[curtFileIx].points[i].col = tempColBuffer[i];
 		}
 
-	private void OnDisable ()
+	private void OnDisable()
 		{
 		dispose();
 		}
 
-	private void OnDestroy ()
+	private void OnDestroy()
 		{
 		dispose();
 		}
