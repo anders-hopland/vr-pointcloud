@@ -3,7 +3,7 @@
 	Properties
 	{
 		_TriggerPress("triggerpress", Int) = 0 // 0 for off, 1 for on
-		_HasNormals("hasnormals", Int) = 0 // 0 for off, 1 for on
+		_DisplayNormals("hasnormals", Int) = 0 // 0 for off, 1 for on
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
 		_EditCol("editCol", Color) = (0.95, 0.88, 0.03, 0)
 		_EditRadius("editradius", Float) = 0.015
@@ -20,7 +20,7 @@
 			uniform RWStructuredBuffer<float4> colsBuf : register(u3);
 
 			int _TriggerPress;
-			int _HasNormals;
+			int _DisplayNormals;
 			float4 _EditPos;
 			float4 _EditCol;
 			float _EditRadius;
@@ -73,7 +73,7 @@
 				float radius = _DisplayRadius;
 				float4 normal = input[0].normal;
 
-				if (_HasNormals == 0)
+				if (_DisplayNormals == 0)
 				{
 					float4 base = UnityObjectToClipPos(input[0].vertex);
 
@@ -86,32 +86,29 @@
 				else
 				{
 					float4 base = input[0].vertex;
-					float3 right = normalize(cross(normal.xyz, float3(1, 0, 1)));
-					//float4 right = float4(1, 0, 0, 0);
-					float3 up = cross(right, normal); // does not need to be normalized
-					//float4 up = float4(0, 1, 0, 0); // does not need to be normalized
+					float3 right = normalize(cross(normal.xyz, float3(0, 1, 0)));
+					float3 up = cross(right, normal);
 
 					right *= radius;
 					up *= radius;
 
-					// Should fix normals later
 					v1.vertex = base - float4(right.xyz, 0) - float4(up.xyz, 0);
 					v2.vertex = base + float4(right.xyz, 0) - float4(up.xyz, 0);
 					v3.vertex = base - float4(right.xyz, 0) + float4(up.xyz, 0);
 					v4.vertex = base + float4(right.xyz, 0) + float4(up.xyz, 0);
-				}
-				
 
-				v1.vertex = UnityObjectToClipPos(v1.vertex);
-				v2.vertex = UnityObjectToClipPos(v2.vertex);
-				v3.vertex = UnityObjectToClipPos(v3.vertex);
-				v4.vertex = UnityObjectToClipPos(v4.vertex);
+					v1.vertex = UnityObjectToClipPos(v1.vertex);
+					v2.vertex = UnityObjectToClipPos(v2.vertex);
+					v3.vertex = UnityObjectToClipPos(v3.vertex);
+					v4.vertex = UnityObjectToClipPos(v4.vertex);
+				}
 
 				v1.col = input[0].col;
 				v2.col = input[0].col;
 				v3.col = input[0].col;
 				v4.col = input[0].col;
 
+				// Add output geom
 				triStream.Append(v2);
 				triStream.Append(v3);
 				triStream.Append(v1);

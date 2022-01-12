@@ -55,26 +55,6 @@ public class PointCloudObject : MonoBehaviour
 		setPointCloud(this.files[0]);
 		}
 
-	private Vector3[] getNormals(Vector3[] points)
-		{
-		KDTree tree = new KDTree(32);
-		tree.Build(points);
-
-		var normals = new Vector3[points.Length];
-		KDQuery query = new KDQuery();
-		List<int> nearestIndices = new List<int>(2);
-		for (int i = 0; i < points.Length; i++)
-			{
-			query.KNearest(tree, points[i], 2, nearestIndices);
-			var v1 = points[i];
-			var v2 = points[nearestIndices[0]];
-			var v3 = points[nearestIndices[1]];
-			var norm = Vector3.Cross(v2 - v1, v3 - v1);
-			normals[i] = norm;
-			}
-		return normals;
-		}
-
 	internal void setPointCloud(LasStruct file)
 		{
 		init();
@@ -83,9 +63,9 @@ public class PointCloudObject : MonoBehaviour
 		var indices = new int[file.points.Length];
 
 		if (displayNormals)
-			{
 			calcNormals(file);
-			}
+
+		setMatDefaults();
 
 		// Scale down
 		if (file.points.Length > 0)
@@ -121,7 +101,7 @@ public class PointCloudObject : MonoBehaviour
 		tree.Build(vertices);
 
 		int k = 8;
-		int kInverse = 1 / k;
+		float kInverse = 1f / k;
 		KDQuery query = new KDQuery();
 		var resultIndices = new List<int>(8);
 		for (int i = 0; i < vertices.Length; i++)
@@ -172,24 +152,42 @@ public class PointCloudObject : MonoBehaviour
 		normBuffer.SetData(normals);
 		}
 
-	internal void setEditCol(Color col)
+	internal void setMatDefaults()
+		{
+		setMatDisplayRad(0.02f);
+		setMatEditCol(Color.yellow);
+		setMatDisplayNormals(displayNormals);
+		}
+
+	internal void setMatEditCol(Color col)
 		{
 		if (mr == null) return;
 		mr.material.SetColor("_EditCol", col);
 		}
 
-	internal void setEditPos(Vector3 pos)
+	internal void setMatEditPos(Vector3 pos)
 		{
 		if (mr == null) return;
 		mr.material.SetVector("_EditPos", pos);
 		}
-	internal void setEditRad(float rad)
+	internal void setMatEditRad(float rad)
 		{
 		if (mr == null) return;
 		mr.material.SetFloat("_EditRadius", rad * (1 / StartScript.curscale));
 		}
+	internal void setMatDisplayRad(float rad)
+		{
+		if (mr == null) return;
+		mr.material.SetFloat("_DisplayRadius", rad);
+		}
 
-	internal void setTriggerPress(bool press)
+	internal void setMatDisplayNormals(bool hasnormals)
+		{
+		if (mr == null) return;
+		mr.material.SetFloat("_DisplayNormals", hasnormals ? 1 : 0);
+		}
+
+	internal void setMatTriggerPress(bool press)
 		{
 		if (mr == null) return;
 		mr.material.SetInt("_TriggerPress", press ? 1 : 0);
