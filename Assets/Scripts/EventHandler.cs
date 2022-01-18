@@ -34,6 +34,11 @@ public class EventHandler
 			if (args.Length == 1)
 				{ StartScript.display.setMatEditPos((Vector3)args[0]); }
 			}
+		else if (e == events.seteditradius)
+			{
+			if (args.Length == 1)
+				{ StartScript.display.setMatEditRad((float)args[0]); }
+			}
 		else if (e == events.settriggerpress)
 			{
 			if (args.Length == 1)

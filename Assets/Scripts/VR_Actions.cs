@@ -105,7 +105,8 @@ public class VR_Actions : MonoBehaviour
 			axis = SteamVR_Input.GetVector2("joystick", leftHand);
 			if (axis.sqrMagnitude > 0)
 				{
-				sceneRoot.transform.localScale += Vector3.one * axis.x * 0.002f;
+				StartScript.sceneRootScale += axis.x * 0.002f;
+				sceneRoot.transform.localScale += Vector3.one * StartScript.sceneRootScale;
 				}
 			}
 

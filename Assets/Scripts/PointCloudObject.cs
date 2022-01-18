@@ -31,6 +31,7 @@ public class PointCloudObject : MonoBehaviour
 		go.name = "PointCloud";
 		go.AddComponent<PointCloudObject>();
 		go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
+		go.transform.parent = StartScript.sceneRoot.transform;
 		var display = go.GetComponent<PointCloudObject>();
 		display.setFile(lasFiles);
 
@@ -201,7 +202,7 @@ public class PointCloudObject : MonoBehaviour
 	internal void setMatEditRad(float rad)
 		{
 		if (mr == null) return;
-		mr.material.SetFloat("_EditRadius", rad * (1 / StartScript.curscale));
+		mr.material.SetFloat("_EditRadius", rad * (1 / StartScript.sceneRootScale));
 		}
 	internal void setMatDisplayRad(float rad)
 		{

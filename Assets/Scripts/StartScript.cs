@@ -12,12 +12,14 @@ public class StartScript : MonoBehaviour
 
 	internal static int curLasFileIndex = 0;
 	internal static PointCloudObject display;
-	internal static float curscale;
 	internal static UIManager ui;
+	internal static GameObject sceneRoot;
+	internal static float sceneRootScale = 1f;
 
 	void Start()
 		{
 		ui = new UIManager();
+		sceneRoot = GameObject.Find("SceneElemRoot");
 		}
 
 	// Update is called once per frame
