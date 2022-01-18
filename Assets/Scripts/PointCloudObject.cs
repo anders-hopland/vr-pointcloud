@@ -24,6 +24,19 @@ public class PointCloudObject : MonoBehaviour
 
 		}
 
+	public static PointCloudObject newPointCloudObject(LasStruct[] lasFiles)
+		{
+		var go = GameObject.CreatePrimitive(PrimitiveType.Plane);
+		go.GetComponent<MeshFilter>().mesh = new Mesh(); // Clear mesh
+		go.name = "PointCloud";
+		go.AddComponent<PointCloudObject>();
+		go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
+		var display = go.GetComponent<PointCloudObject>();
+		display.setFile(lasFiles);
+
+		return display;
+		}
+
 	internal void init()
 		{
 		if (initialized) return;
@@ -129,6 +142,7 @@ public class PointCloudObject : MonoBehaviour
 				zz += p.z * p.z;
 				}
 
+			// Find determinants
 			var detX = yy * zz - yz * yz;
 			var detY = xx * zz - xz * xz;
 			var detZ = xx * yy - xy * xy;
@@ -148,6 +162,20 @@ public class PointCloudObject : MonoBehaviour
 			normal = normal.normalized;
 			normals[i] = normal;
 			}
+
+		//int n = 0;
+		//for (int i = 0; i < n; i++)
+		//	{
+		//	resultIndices.Clear();
+		//	query.KNearest(tree, vertices[i], k, resultIndices);
+		//	Vector3 sum = Vector3.zero;
+		//	for (int j = 0; j < k; j++)
+		//		sum += normals[resultIndices[j]];
+
+		//	sum *= kInverse;
+
+		//	normals[i] = sum;
+		//	}
 
 		normBuffer.SetData(normals);
 		}

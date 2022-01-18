@@ -2,6 +2,7 @@
 {
 	Properties
 	{
+		_MainTex("Texture", 2D) = "white" {}
 		_TriggerPress("triggerpress", Int) = 0 // 0 for off, 1 for on
 		_DisplayNormals("hasnormals", Int) = 0 // 0 for off, 1 for on
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
@@ -19,6 +20,7 @@
 			uniform RWStructuredBuffer<float3> normsBuf : register(u2);
 			uniform RWStructuredBuffer<float4> colsBuf : register(u3);
 
+			sampler2D _MainTex;
 			int _TriggerPress;
 			int _DisplayNormals;
 			float4 _EditPos;
@@ -42,6 +44,7 @@
 			{
 				float4 vertex : SV_POSITION;
 				float4 col : COLOR;
+				float2 uv : TEXCOORD0;
 			};
 			v2g vert(appdata v)
 			{
@@ -108,6 +111,11 @@
 				v3.col = input[0].col;
 				v4.col = input[0].col;
 
+				v1.uv = float2(0, 0);
+				v2.uv = float2(1, 0);
+				v3.uv = float2(0, 1);
+				v4.uv = float2(1, 1);
+
 				// Add output geom
 				triStream.Append(v2);
 				triStream.Append(v3);
@@ -122,7 +130,17 @@
 
 			fixed4 frag(g2f i) : SV_Target
 			{
-				fixed4 col = i.col;
+				float4 col = i.col;
+				float x = i.uv.x;
+				float y = i.uv.y;
+				float dist = sqrt(pow((0.5 - x), 2) + pow((0.5 - y), 2));
+				if (dist > 0.5) {
+					discard;
+				}
+				else {
+					col = i.col;
+				}
+
 				return col;
 			}
 		ENDCG
