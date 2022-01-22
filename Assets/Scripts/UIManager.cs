@@ -7,7 +7,8 @@ using UnityEngine;
 using UnityEngine.UI;
 public class UIManager
 	{
-	internal Dropdown layerDropdown;
+	internal Dropdown layerDropdownDesktop;
+	internal Dropdown layerDropdownVr;
 	internal GameObject vrMenuRoot;
 	internal GameObject desktopMenuRoot;
 	public UIManager()
@@ -19,6 +20,8 @@ public class UIManager
 		registerLayerSelectorCallback();
 		registerPrevPointcloudBtn();
 		registerNextPointcloudBtn();
+		registerDisplayNormalsCallback();
+		registerChangePointRadCallback();
 		vrAddColliders(vrMenuRoot);
 		}
 
@@ -94,15 +97,49 @@ public class UIManager
 		var go = Helpers.findGameObject(vrMenuRoot, "LayerDropdown");
 		if (go != null)
 			{
-			var btn = go.GetComponent<Button>();
-			layerDropdown.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
+			layerDropdownVr = go.GetComponent<Dropdown>();
+			layerDropdownVr.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
 			}
 
 		go = Helpers.findGameObject(desktopMenuRoot, "LayerDropdown");
 		if (go != null)
 			{
+			layerDropdownDesktop = go.GetComponent<Dropdown>();
+			layerDropdownDesktop.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
+			}
+		}
+
+	internal void registerDisplayNormalsCallback()
+		{
+		var go = Helpers.findGameObject(vrMenuRoot, "NormalsToggle");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Toggle>();
+			btn.onValueChanged.AddListener((bool val) => displayNormalsToggleCallback(val));
+			}
+
+		go = Helpers.findGameObject(desktopMenuRoot, "NormalsToggle");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Toggle>();
+			btn.onValueChanged.AddListener((bool val) => displayNormalsToggleCallback(val));
+			}
+		}
+
+	internal void registerChangePointRadCallback()
+		{
+		var go = Helpers.findGameObject(vrMenuRoot, "ChangePointRadButton");
+		if (go != null)
+			{
 			var btn = go.GetComponent<Button>();
-			layerDropdown.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
+			btn.onClick.AddListener(() => changePointRadCallback());
+			}
+
+		go = Helpers.findGameObject(desktopMenuRoot, "ChangePointRadButton");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
+			btn.onClick.AddListener(() => changePointRadCallback());
 			}
 		}
 
@@ -166,7 +203,27 @@ public class UIManager
 		};
 	internal void layerDropdownCallback(int newIndex)
 		{
+		// Sync both menu elements
+		layerDropdownDesktop.value = newIndex;
+		layerDropdownVr.value = newIndex;
+
 		EventHandler.registerEvent(EventHandler.events.setlayer, layerColors[newIndex]);
+		}
+
+	internal void displayNormalsToggleCallback(bool val)
+		{
+		StartScript.displayNormals = val;
+		}
+
+	internal void changePointRadCallback()
+		{
+		var input = Helpers.findGameObject(desktopMenuRoot, "PointRadInput");
+		var textGo = Helpers.findGameObject(input, "Text");
+		var text = textGo.GetComponent<Text>();
+		float pointRad = 0.01f;
+		float.TryParse(text.text, out pointRad);
+		if (pointRad <= 0) pointRad = 0.01f;
+		StartScript.display.setMatDisplayRad(pointRad);
 		}
 
 	internal void quitApplicationCallback()

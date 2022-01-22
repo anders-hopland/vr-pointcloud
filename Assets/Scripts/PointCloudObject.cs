@@ -12,7 +12,7 @@ public class PointCloudObject : MonoBehaviour
 	internal MeshRenderer mr;
 	internal LasStruct[] files;
 	internal int curtFileIx = 0;
-	internal bool displayNormals = true;
+	internal bool displayNormals = false;
 	internal bool initialized;
 	void Start()
 		{
@@ -33,6 +33,7 @@ public class PointCloudObject : MonoBehaviour
 		go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
 		go.transform.parent = StartScript.sceneRoot.transform;
 		var display = go.GetComponent<PointCloudObject>();
+		display.displayNormals = StartScript.displayNormals;
 		display.setFile(lasFiles);
 
 		return display;
@@ -173,8 +174,8 @@ public class PointCloudObject : MonoBehaviour
 		setMatEditCol(Color.yellow);
 		setMatDisplayNormals(displayNormals);
 
-		if (StartScript.ui.layerDropdown != null)
-			setMatEditCol(UIManager.layerColors[StartScript.ui.layerDropdown.value]);
+		if (StartScript.ui.layerDropdownDesktop != null)
+			setMatEditCol(UIManager.layerColors[StartScript.ui.layerDropdownDesktop.value]);
 		else
 			setMatEditCol(UIManager.layerColors[0]);
 		}

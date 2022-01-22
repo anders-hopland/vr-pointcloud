@@ -15,6 +15,7 @@ public class StartScript : MonoBehaviour
 	internal static UIManager ui;
 	internal static GameObject sceneRoot;
 	internal static float sceneRootScale = 1f;
+	internal static bool displayNormals = false;
 
 	void Start()
 		{
