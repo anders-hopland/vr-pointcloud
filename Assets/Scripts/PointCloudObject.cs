@@ -164,20 +164,6 @@ public class PointCloudObject : MonoBehaviour
 			normals[i] = normal;
 			}
 
-		//int n = 0;
-		//for (int i = 0; i < n; i++)
-		//	{
-		//	resultIndices.Clear();
-		//	query.KNearest(tree, vertices[i], k, resultIndices);
-		//	Vector3 sum = Vector3.zero;
-		//	for (int j = 0; j < k; j++)
-		//		sum += normals[resultIndices[j]];
-
-		//	sum *= kInverse;
-
-		//	normals[i] = sum;
-		//	}
-
 		normBuffer.SetData(normals);
 		}
 
@@ -186,6 +172,11 @@ public class PointCloudObject : MonoBehaviour
 		setMatDisplayRad(0.02f);
 		setMatEditCol(Color.yellow);
 		setMatDisplayNormals(displayNormals);
+
+		if (StartScript.ui.layerDropdown != null)
+			setMatEditCol(UIManager.layerColors[StartScript.ui.layerDropdown.value]);
+		else
+			setMatEditCol(UIManager.layerColors[0]);
 		}
 
 	internal void setMatEditCol(Color col)

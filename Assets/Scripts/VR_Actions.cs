@@ -51,45 +51,8 @@ public class VR_Actions : MonoBehaviour
 	internal bool triggerMenuInteraction = false;
 	internal void checkMenuInteraction()
 		{
-		bool triggerPressDown = SteamVR_Input.GetStateDown("GrabPinch", rightHand);
-		bool triggerPress = SteamVR_Input.GetState("GrabPinch", rightHand);
-
-		bool menuClick = false;
-		// Check for hover on button
-		foreach (var go in menuItems)
-			{
-			if (editSphere.GetComponent < MeshRenderer>().bounds.Intersects(go.GetComponent<MeshRenderer>().bounds))
-				{
-				go.GetComponent<MeshRenderer>().material.color = Color.white;
-				// Problem with bounds, so multiple buttons can be hit simultanously
-				// Must thus have make sure that we only interact with first hit
-				if (triggerPressDown && !menuClick) 
-					{
-					if (go.name == "ButtonLayer1")
-						{
-						EventHandler.registerEvent(EventHandler.events.setlayer, Color.yellow);
-						menuClick = true;
-						}
-					else if (go.name == "ButtonLayer2")
-						{
-						EventHandler.registerEvent(EventHandler.events.setlayer, Color.cyan);
-						menuClick = true;
-						}
-					else if (go.name == "nextFrame")
-						{
-						EventHandler.registerEvent(EventHandler.events.next);
-						menuClick = true;
-						}
-					else if (go.name == "prevFrame")
-						{
-						EventHandler.registerEvent(EventHandler.events.prev);
-						menuClick = true;
-						}
-					}
-				}
-			else
-				go.GetComponent<MeshRenderer>().material.color = Color.blue;
-			}
+		//bool triggerPressDown = SteamVR_Input.GetStateDown("GrabPinch", rightHand);
+		//bool triggerPress = SteamVR_Input.GetState("GrabPinch", rightHand);
 		}
 
 	internal void checkResize()
