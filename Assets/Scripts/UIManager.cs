@@ -9,18 +9,29 @@ public class UIManager
 	{
 	internal Dropdown layerDropdown;
 	internal GameObject vrMenuRoot;
+	internal GameObject desktopMenuRoot;
 	public UIManager()
 		{
 		vrMenuRoot = GameObject.Find("VR menu");
+		desktopMenuRoot = GameObject.Find("Desktop menu");
 		registerLoadPointCloudBtnCallback();
 		registerExitProgramButton();
 		registerLayerSelectorCallback();
+		registerPrevPointcloudBtn();
+		registerNextPointcloudBtn();
 		vrAddColliders(vrMenuRoot);
 		}
 
 	internal void registerLoadPointCloudBtnCallback()
 		{
-		var go = GameObject.Find("loadPointCloudBtn");
+		var go = Helpers.findGameObject(vrMenuRoot, "loadPointCloudBtn");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
+			btn.onClick.AddListener(() => openFileLoadDialog());
+			}
+
+		go = Helpers.findGameObject(desktopMenuRoot, "loadPointCloudBtn");
 		if (go != null)
 			{
 			var btn = go.GetComponent<Button>();
@@ -29,7 +40,14 @@ public class UIManager
 		}
 	internal void registerExitProgramButton()
 		{
-		var go = GameObject.Find("ExitProgramButton");
+		var go = Helpers.findGameObject(vrMenuRoot, "ExitProgramButton");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
+			btn.onClick.AddListener(() => quitApplicationCallback());
+			}
+
+		go = Helpers.findGameObject(desktopMenuRoot, "ExitProgramButton");
 		if (go != null)
 			{
 			var btn = go.GetComponent<Button>();
@@ -37,12 +55,53 @@ public class UIManager
 			}
 		}
 
-	internal void registerLayerSelectorCallback()
+	internal void registerPrevPointcloudBtn()
 		{
-		var go = GameObject.Find("LayerDropdown");
+		var go = Helpers.findGameObject(vrMenuRoot, "PrevPointcloudBtn");
 		if (go != null)
 			{
-			layerDropdown = go.GetComponent<Dropdown>();
+			var btn = go.GetComponent<Button>();
+			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.prev));
+			}
+
+		go = Helpers.findGameObject(desktopMenuRoot, "PrevPointcloudBtn");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
+			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.prev));
+			}
+		}
+
+	internal void registerNextPointcloudBtn()
+		{
+		var go = Helpers.findGameObject(vrMenuRoot, "NextPointcloudBtn");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
+			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.next));
+			}
+
+		go = Helpers.findGameObject(desktopMenuRoot, "NextPointcloudBtn");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
+			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.next));
+			}
+		}
+
+	internal void registerLayerSelectorCallback()
+		{
+		var go = Helpers.findGameObject(vrMenuRoot, "LayerDropdown");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
+			layerDropdown.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
+			}
+
+		go = Helpers.findGameObject(desktopMenuRoot, "LayerDropdown");
+		if (go != null)
+			{
+			var btn = go.GetComponent<Button>();
 			layerDropdown.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
 			}
 		}
@@ -109,6 +168,7 @@ public class UIManager
 		{
 		EventHandler.registerEvent(EventHandler.events.setlayer, layerColors[newIndex]);
 		}
+
 	internal void quitApplicationCallback()
 		{
 #if UNITY_EDITOR
