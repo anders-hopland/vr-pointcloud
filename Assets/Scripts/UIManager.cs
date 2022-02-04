@@ -4,9 +4,22 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 public class UIManager
 	{
+
+	internal static Color[] layerColors = new Color[]
+	{
+		Color.blue,
+		Color.red,
+		Color.white,
+		Color.yellow,
+		Color.green,
+		Color.gray,
+		Color.magenta
+	};
+
 	internal Dropdown layerDropdownDesktop;
 	internal Dropdown layerDropdownVr;
 	internal GameObject vrMenuRoot;
@@ -15,141 +28,79 @@ public class UIManager
 		{
 		vrMenuRoot = GameObject.Find("VR menu");
 		desktopMenuRoot = GameObject.Find("Desktop menu");
-		registerLoadPointCloudBtnCallback();
-		registerExitProgramButton();
-		registerLayerSelectorCallback();
-		registerPrevPointcloudBtn();
-		registerNextPointcloudBtn();
-		registerDisplayNormalsCallback();
-		registerChangePointRadCallback();
-		vrAddColliders(vrMenuRoot);
+		registerCallBacks();
+		registerVariables();
+		addUiColliders(vrMenuRoot);
 		}
 
-	internal void registerLoadPointCloudBtnCallback()
+	internal void registerVariables()
 		{
-		var go = Helpers.findGameObject(vrMenuRoot, "loadPointCloudBtn");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => openFileLoadDialog());
-			}
-
-		go = Helpers.findGameObject(desktopMenuRoot, "loadPointCloudBtn");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => openFileLoadDialog());
-			}
+		layerDropdownDesktop = (Dropdown)Helpers.findGameObjectComponent(desktopMenuRoot, "Dropdown", "LayerDropdown");
+		layerDropdownVr = (Dropdown)Helpers.findGameObjectComponent(vrMenuRoot, "Dropdown", "LayerDropdown");
 		}
-	internal void registerExitProgramButton()
+	internal void registerCallBacks()
 		{
-		var go = Helpers.findGameObject(vrMenuRoot, "ExitProgramButton");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => quitApplicationCallback());
-			}
-
-		go = Helpers.findGameObject(desktopMenuRoot, "ExitProgramButton");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => quitApplicationCallback());
-			}
+		addListenerVrDesktop("ExitProgramButton", "Button", () => quitApplicationCallback());
+		addListenerVrDesktop("loadPointCloudBtn", "Button", () => openFileLoadDialog());
+		addListenerVrDesktop("PrevPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.prev));
+		addListenerVrDesktop("NextPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.next));
+		addListenerVrDesktop("LayerDropdown", "Dropdown", (int newIndex) => layerDropdownCallback(newIndex));
+		addListenerVrDesktop("NormalsToggle", "Toggle", (bool val) => { displayNormalsToggleCallback(val); });
+		addListenerVrDesktop("ChangePointRadButton", "Button", changePointRadCallback);
 		}
 
-	internal void registerPrevPointcloudBtn()
+	private void addListenerVrDesktop(string name, string type, Action func)
 		{
-		var go = Helpers.findGameObject(vrMenuRoot, "PrevPointcloudBtn");
-		if (go != null)
+		var component = Helpers.findGameObjectComponent(vrMenuRoot, type, name);
+		if (component != null)
 			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.prev));
+			if (type == "Button") (component as Button).onClick.AddListener(() => func());
 			}
 
-		go = Helpers.findGameObject(desktopMenuRoot, "PrevPointcloudBtn");
-		if (go != null)
+		component = Helpers.findGameObjectComponent(desktopMenuRoot, type, name);
+		if (component != null)
 			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.prev));
+			if (type == "Button") (component as Button).onClick.AddListener(() => func());
 			}
 		}
 
-	internal void registerNextPointcloudBtn()
+	private void addListenerVrDesktop(string name, string type, Action<int> func)
 		{
-		var go = Helpers.findGameObject(vrMenuRoot, "NextPointcloudBtn");
-		if (go != null)
+		var component = Helpers.findGameObjectComponent(vrMenuRoot, type, name);
+		if (component != null)
 			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.next));
+			if (type == "Dropdown") (component as Dropdown).onValueChanged.AddListener((int val) => func(val));
 			}
 
-		go = Helpers.findGameObject(desktopMenuRoot, "NextPointcloudBtn");
-		if (go != null)
+		component = Helpers.findGameObjectComponent(desktopMenuRoot, type, name);
+		if (component != null)
 			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => EventHandler.registerEvent(EventHandler.events.next));
+			if (type == "Dropdown") (component as Dropdown).onValueChanged.AddListener((int val) => func(val));
 			}
 		}
 
-	internal void registerLayerSelectorCallback()
+	private void addListenerVrDesktop(string name, string type, Action<bool> func)
 		{
-		var go = Helpers.findGameObject(vrMenuRoot, "LayerDropdown");
-		if (go != null)
+		var component = Helpers.findGameObjectComponent(vrMenuRoot, type, name);
+		if (component != null)
 			{
-			layerDropdownVr = go.GetComponent<Dropdown>();
-			layerDropdownVr.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
+			if (type == "Toggle") (component as Toggle).onValueChanged.AddListener((bool val) => func(val));
 			}
 
-		go = Helpers.findGameObject(desktopMenuRoot, "LayerDropdown");
-		if (go != null)
+		component = Helpers.findGameObjectComponent(desktopMenuRoot, type, name);
+		if (component != null)
 			{
-			layerDropdownDesktop = go.GetComponent<Dropdown>();
-			layerDropdownDesktop.onValueChanged.AddListener((int newIndex) => layerDropdownCallback(newIndex));
+			if (type == "Toggle") (component as Toggle).onValueChanged.AddListener((bool val) => func(val));
 			}
 		}
 
-	internal void registerDisplayNormalsCallback()
-		{
-		var go = Helpers.findGameObject(vrMenuRoot, "NormalsToggle");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Toggle>();
-			btn.onValueChanged.AddListener((bool val) => displayNormalsToggleCallback(val));
-			}
-
-		go = Helpers.findGameObject(desktopMenuRoot, "NormalsToggle");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Toggle>();
-			btn.onValueChanged.AddListener((bool val) => displayNormalsToggleCallback(val));
-			}
-		}
-
-	internal void registerChangePointRadCallback()
-		{
-		var go = Helpers.findGameObject(vrMenuRoot, "ChangePointRadButton");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => changePointRadCallback());
-			}
-
-		go = Helpers.findGameObject(desktopMenuRoot, "ChangePointRadButton");
-		if (go != null)
-			{
-			var btn = go.GetComponent<Button>();
-			btn.onClick.AddListener(() => changePointRadCallback());
-			}
-		}
-
-	internal void vrAddColliders(GameObject root)
+	internal void addUiColliders(GameObject root)
 		{
 		int numChildren = root.transform.childCount;
 		for (int i = 0; i < numChildren; i++)
 			{
 			var go = root.transform.GetChild(i).gameObject;
-			if (go.GetComponent<Dropdown>() != null 
+			if (go.GetComponent<Dropdown>() != null
 				|| go.GetComponent<Button>() != null
 				|| go.GetComponent<Toggle>() != null)
 				{
@@ -166,7 +117,7 @@ public class UIManager
 					collider.size = new Vector3(width, height, 1);
 					}
 				}
-			if (go.transform.childCount > 0) vrAddColliders(go);
+			if (go.transform.childCount > 0) addUiColliders(go);
 			}
 		}
 
@@ -191,16 +142,6 @@ public class UIManager
 		StartScript.display = PointCloudObject.newPointCloudObject(lasFiles);
 		}
 
-	internal static Color[] layerColors = new Color[]
-		{
-		Color.blue,
-		Color.red,
-		Color.white,
-		Color.yellow,
-		Color.green,
-		Color.gray,
-		Color.magenta
-		};
 	internal void layerDropdownCallback(int newIndex)
 		{
 		// Sync both menu elements

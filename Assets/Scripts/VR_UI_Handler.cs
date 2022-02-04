@@ -28,7 +28,7 @@ public class VR_UI_Handler : MonoBehaviour
 		// Maybe make a cleaner way to do this later
 		if (e.target.gameObject.GetComponent<Dropdown>() != null)
 			{
-			StartScript.ui.vrAddColliders(e.target.gameObject);
+			StartScript.ui.addUiColliders(e.target.gameObject);
 			}
 
 		clickHandler.OnPointerClick(new PointerEventData(EventSystem.current));
