@@ -14,6 +14,23 @@ public class VR_Actions : MonoBehaviour
 	internal GameObject sceneRoot;
 	internal GameObject editSphere;
 	internal List<GameObject> menuItems;
+
+	internal bool grabbingRight;
+	internal bool grabbingLeft;
+	internal float scaleDist;
+
+	// Grab resize
+	internal bool resizing;
+	internal float initialResizeDist;
+	internal float origResizeScale;
+	internal Vector3 startRightHandPos;
+	internal Vector3 startLeftHandPos;
+	internal Quaternion initialSceneRot;
+	internal float initialSceneScale;
+	internal Vector3 intitialSceneDir;
+	internal Vector3 startDirBetweenHands;
+
+
 	void Start()
 		{
 		leftHand = SteamVR_Input_Sources.LeftHand;
@@ -23,6 +40,8 @@ public class VR_Actions : MonoBehaviour
 		sceneRoot = GameObject.Find("SceneElemRoot");
 		editSphere = GameObject.Find("EditSphere");
 		editSphereRad = editSphere.transform.localScale.x / 2f;
+		baseEditSpherePos = editSphere.transform.localPosition;
+		baseEditSpherePos -= new Vector3(0, editSphereRad, editSphereRad);
 
 		menuItems = new List<GameObject>();
 		GameObject go = GameObject.Find("ButtonLayer1");
@@ -36,57 +55,75 @@ public class VR_Actions : MonoBehaviour
 		}
 
 	internal float editSphereRad = 1f;
+	internal Vector3 baseEditSpherePos;
 	void Update()
 		{
-		checkMenuInteraction();
+		checkJoystickResize();
+		checkGrabMove();
+		checkGrabResize();
 		updateShaderParams();
-		checkDragMove();
-		checkResize();
+
+		if (SteamVR_Input.GetStateDown("GrabPinch", leftHand)) // Left trigger
+			{
+			StartScript.ui.toggleVrMenu();
+			}
 		}
 
-	internal bool grabbingRight = false;
-	internal bool grabbingLeft = false;
-	internal float scaleDist;
-	internal bool checkFirstResize = true;
-	internal bool triggerMenuInteraction = false;
-	internal void checkMenuInteraction()
+	internal void checkJoystickResize()
 		{
-		//bool triggerPressDown = SteamVR_Input.GetStateDown("GrabPinch", rightHand);
-		//bool triggerPress = SteamVR_Input.GetState("GrabPinch", rightHand);
-		}
-
-	internal void checkResize()
-		{
-		if (checkFirstResize)
-			{
-			checkFirstResize = false;
-			Debug.Log("Check first resize");
-			}
-		Vector2 axis;
-		if (!grabbingLeft && !grabbingRight)
-			{
-			axis = SteamVR_Input.GetVector2("joystick", leftHand);
-			if (axis.sqrMagnitude > 0)
-				{
-				StartScript.sceneRootScale += axis.x * 0.002f;
-				sceneRoot.transform.localScale += Vector3.one * StartScript.sceneRootScale;
-				}
-			}
-
-		axis = SteamVR_Input.GetVector2("joystick", rightHand);
+		var axis = SteamVR_Input.GetVector2("joystick", rightHand);
 		if (axis.sqrMagnitude > 0)
 			{
 			editSphereRad += axis.x * 0.0015f;
 			if (editSphereRad < 0.015f) editSphereRad = 0.015f;
 			else if (editSphereRad > 0.15f) editSphereRad = 0.15f;
 			editSphere.transform.localScale = Vector3.one * editSphereRad * 2; // Diameter is radius * 2
+			
 			}
+		}
 
-		var grabPinch = SteamVR_Input.GetState("GrabPinch", leftHand);
+	internal void checkGrabResize()
+		{
+		if (grabbingLeft && grabbingRight)
+			{
+			if (!resizing)
+				{
+				startRightHandPos = rightHandGo.transform.position;
+				startLeftHandPos = leftHandGo.transform.position;
+				initialSceneRot = StartScript.sceneRoot.transform.rotation;
+				initialSceneScale = StartScript.sceneRoot.transform.localScale.x;
+				intitialSceneDir = StartScript.sceneRoot.transform.position - (startRightHandPos + startLeftHandPos) * 0.5f;
+				startDirBetweenHands = (startRightHandPos - startLeftHandPos).normalized;
+
+				resizing = true;
+				}
+			else
+				{
+				Vector3 curRightHandPos = rightHandGo.transform.position;
+				Vector3 curLeftHandPos = leftHandGo.transform.position;
+
+				Vector3 curDirBetweenHands = (curRightHandPos - curLeftHandPos).normalized;
+
+				Quaternion rot = Quaternion.FromToRotation(startDirBetweenHands, curDirBetweenHands);
+
+				float currentGrabDistance = (curRightHandPos - curLeftHandPos).magnitude;
+				float initialGrabDistance = (startRightHandPos - startLeftHandPos).magnitude;
+				float distChange = (currentGrabDistance / initialGrabDistance);
+
+				StartScript.sceneRootScale = initialSceneScale * distChange;
+				StartScript.sceneRoot.transform.rotation = rot * initialSceneRot;
+				StartScript.sceneRoot.transform.localScale = Vector3.one * StartScript.sceneRootScale;
+				StartScript.sceneRoot.transform.position = (0.5f * (curRightHandPos + curLeftHandPos)) + (rot * (intitialSceneDir * distChange));
+				}
+			}
+		else
+			{
+			resizing = false;
+			}
 		}
 	internal Vector3 lastGrabPos;
 	internal Quaternion lastGrabRot;
-	internal void checkDragMove()
+	internal void checkGrabMove()
 		{
 		bool grabRight = SteamVR_Input.GetState("GrabGrip", rightHand);
 		bool grabLeft = SteamVR_Input.GetState("GrabGrip", leftHand);
@@ -103,8 +140,9 @@ public class VR_Actions : MonoBehaviour
 				}
 			}
 
-		if ((grabbingLeft && !grabLeft) || (grabbingRight && !grabRight))
+		if ((grabbingLeft && !grabLeft) || (grabbingRight && !grabRight) || (grabLeft && grabRight))
 			sceneRoot.transform.parent = null;
+
 
 		grabbingLeft = grabLeft;
 		grabbingRight = grabRight;
@@ -116,6 +154,7 @@ public class VR_Actions : MonoBehaviour
 		var newEditPos = StartScript.display.transform.InverseTransformPoint(editSphere.transform.position);
 		EventHandler.registerEvent(EventHandler.events.seteditpos, newEditPos);
 		EventHandler.registerEvent(EventHandler.events.seteditradius, editSphereRad);
+		EventHandler.registerEvent(EventHandler.events.updatedisplayrad);
 		EventHandler.registerEvent(EventHandler.events.settriggerpress, SteamVR_Input.GetState("GrabPinch", rightHand));
 		}
 	}

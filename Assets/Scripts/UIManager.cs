@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using TMPro;
 public class UIManager
 	{
 
@@ -46,7 +47,8 @@ public class UIManager
 		addListenerVrDesktop("NextPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.next));
 		addListenerVrDesktop("LayerDropdown", "Dropdown", (int newIndex) => layerDropdownCallback(newIndex));
 		addListenerVrDesktop("NormalsToggle", "Toggle", (bool val) => { displayNormalsToggleCallback(val); });
-		addListenerVrDesktop("ChangePointRadButton", "Button", changePointRadCallback);
+		addListenerVrDesktop("LowerPointRadBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.decreasedisplayrad));
+		addListenerVrDesktop("HigherPointRadBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.increasedisplayrad));
 		}
 
 	private void addListenerVrDesktop(string name, string type, Action func)
@@ -142,6 +144,34 @@ public class UIManager
 		StartScript.display = PointCloudObject.newPointCloudObject(lasFiles);
 		}
 
+	internal TextMeshProUGUI statisticsObjectNameVr;
+	internal TextMeshProUGUI statisticsPointCountVr;
+	internal TextMeshProUGUI statisticsPointCountDesktop;
+	internal TextMeshProUGUI statisticsObjectNameDesktop;
+	internal void updateStatistics(string curObjectName, int numPoints)
+		{
+		if (statisticsPointCountVr == null)
+			statisticsPointCountVr = Helpers.findGameObjectComponent(vrMenuRoot, "TextMeshProUGUI", "StatisticsPointCount") as TextMeshProUGUI;
+		if (statisticsPointCountDesktop == null)
+			statisticsPointCountDesktop = Helpers.findGameObjectComponent(desktopMenuRoot, "TextMeshProUGUI", "StatisticsPointCount") as TextMeshProUGUI;
+		
+		if (statisticsObjectNameVr == null)
+			statisticsObjectNameVr = Helpers.findGameObjectComponent(vrMenuRoot, "TextMeshProUGUI", "StatisticsObjectName") as TextMeshProUGUI;
+		if (statisticsObjectNameDesktop == null)
+			statisticsObjectNameDesktop = Helpers.findGameObjectComponent(desktopMenuRoot, "TextMeshProUGUI", "StatisticsObjectName") as TextMeshProUGUI;
+
+		if (statisticsPointCountVr != null) statisticsPointCountVr.text = numPoints.ToString();
+		if (statisticsObjectNameVr != null) statisticsObjectNameVr.text = curObjectName;
+
+		if (statisticsPointCountDesktop != null) statisticsPointCountDesktop.text = numPoints.ToString();
+		if (statisticsObjectNameDesktop != null) statisticsObjectNameDesktop.text = curObjectName;
+		}
+
+	internal void toggleVrMenu()
+		{
+		vrMenuRoot.gameObject.SetActive(!vrMenuRoot.gameObject.activeSelf);
+		}
+
 	internal void layerDropdownCallback(int newIndex)
 		{
 		// Sync both menu elements
@@ -154,17 +184,6 @@ public class UIManager
 	internal void displayNormalsToggleCallback(bool val)
 		{
 		StartScript.displayNormals = val;
-		}
-
-	internal void changePointRadCallback()
-		{
-		var input = Helpers.findGameObject(desktopMenuRoot, "PointRadInput");
-		var textGo = Helpers.findGameObject(input, "Text");
-		var text = textGo.GetComponent<Text>();
-		float pointRad = 0.01f;
-		float.TryParse(text.text, out pointRad);
-		if (pointRad <= 0) pointRad = 0.01f;
-		StartScript.display.setMatDisplayRad(pointRad);
 		}
 
 	internal void quitApplicationCallback()

@@ -11,9 +11,12 @@ public class PointCloudObject : MonoBehaviour
 	internal MeshFilter mf;
 	internal MeshRenderer mr;
 	internal LasStruct[] files;
-	internal int curtFileIx = 0;
-	internal bool displayNormals = false;
+	internal int curtFileIx;
+	internal bool displayNormals;
+	internal float displayRadius;
 	internal bool initialized;
+
+
 	void Start()
 		{
 		init();
@@ -98,6 +101,8 @@ public class PointCloudObject : MonoBehaviour
 
 		vertBuffer.SetData(vertices);
 		colBuffer.SetData(colors);
+
+		StartScript.ui.updateStatistics("Point Cloud", file.points.Length);
 		}
 
 	// Based on: https://www.ilikebigbits.com/2015_03_04_plane_from_points.html
@@ -194,18 +199,38 @@ public class PointCloudObject : MonoBehaviour
 	internal void setMatEditRad(float rad)
 		{
 		if (mr == null) return;
-		mr.material.SetFloat("_EditRadius", rad * (1 / StartScript.sceneRootScale));
+		mr.material.SetFloat("_EditRadius", rad * (1f /StartScript.sceneRootScale));
 		}
 	internal void setMatDisplayRad(float rad)
 		{
 		if (mr == null) return;
-		mr.material.SetFloat("_DisplayRadius", rad);
+		displayRadius = rad;
+		mr.material.SetFloat("_DisplayRadius", displayRadius * (1 / StartScript.sceneRootScale));
 		}
-
-	internal void setMatDisplayNormals(bool hasnormals)
+	internal void updateMatDisplayRad()
 		{
 		if (mr == null) return;
-		mr.material.SetFloat("_DisplayNormals", hasnormals ? 1 : 0);
+		mr.material.SetFloat("_DisplayRadius", displayRadius * StartScript.sceneRootScale);
+		}
+
+	private const float displayRadStepSize = 1.16f;
+	internal void increaseDisplayRad()
+		{
+		if (mr == null) return;
+		displayRadius *= displayRadStepSize;
+		mr.material.SetFloat("_DisplayRadius", displayRadius);
+		}
+	internal void decreaseDisplayRad()
+		{
+		if (mr == null) return;
+		displayRadius *= (1f / displayRadStepSize);
+		mr.material.SetFloat("_DisplayRadius", displayRadius);
+		}
+	internal void setMatDisplayNormals(bool displayNormals)
+		{
+		if (mr == null) return;
+		this.displayNormals = displayNormals;
+		mr.material.SetFloat("_DisplayNormals", displayNormals ? 1 : 0);
 		}
 
 	internal void setMatTriggerPress(bool press)
@@ -216,16 +241,18 @@ public class PointCloudObject : MonoBehaviour
 
 	internal void nextPointCloud()
 		{
-		downloadCurPointCloud();
+		StartScript.ui.updateStatistics("Point Cloud", files[curtFileIx].points.Length);
 		if (curtFileIx >= files.Length - 1) return;
+		downloadCurPointCloud();
 		curtFileIx++;
 		setPointCloud(files[curtFileIx]);
 		}
 
 	internal void prevPointCloud()
 		{
-		downloadCurPointCloud();
+		StartScript.ui.updateStatistics("Point Cloud", files[curtFileIx].points.Length);
 		if (curtFileIx <= 0) return;
+		downloadCurPointCloud();
 		curtFileIx--;
 		setPointCloud(files[curtFileIx]);
 		}

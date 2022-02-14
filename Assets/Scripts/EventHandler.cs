@@ -11,7 +11,10 @@ public class EventHandler
 		setlayer,
 		settriggerpress,
 		seteditpos,
-		seteditradius
+		seteditradius,
+		updatedisplayrad,
+		increasedisplayrad,
+		decreasedisplayrad
 		}
 	internal static void registerEvent(events e, params object[] args)
 		{
@@ -38,6 +41,18 @@ public class EventHandler
 			{
 			if (args.Length == 1)
 				{ StartScript.display.setMatEditRad((float)args[0]); }
+			}
+		else if (e == events.updatedisplayrad)
+			{
+			StartScript.display.updateMatDisplayRad();
+			}
+		else if (e == events.increasedisplayrad)
+			{
+			StartScript.display.increaseDisplayRad();
+			}
+		else if (e == events.decreasedisplayrad)
+			{
+			StartScript.display.decreaseDisplayRad();
 			}
 		else if (e == events.settriggerpress)
 			{

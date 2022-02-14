@@ -49,6 +49,12 @@ public class Helpers
 			{
 			if (rootNode.transform.GetChild(i).gameObject.name == name)
 				{
+				if (name == "StatisticsPointCount")
+					{
+					var components = rootNode.transform.GetChild(i).gameObject.GetComponents(typeof(Component));
+					var wtf = 0;
+					}
+
 				ret = rootNode.transform.GetChild(i).gameObject.GetComponent(type); 
 				break; }
 			else
