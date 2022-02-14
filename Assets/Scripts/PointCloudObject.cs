@@ -1,6 +1,8 @@
 ﻿using DataStructures.ViliWonka.KDTree;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class PointCloudObject : MonoBehaviour
@@ -108,23 +110,54 @@ public class PointCloudObject : MonoBehaviour
 	// Based on: https://www.ilikebigbits.com/2015_03_04_plane_from_points.html
 	internal void calcNormals(LasStruct file)
 		{
-		Vector3[] normals = new Vector3[file.points.Length];
-		Vector3[] vertices = new Vector3[file.points.Length];
-
+		normals = new Vector3[file.points.Length];
+		vertices = new Vector3[file.points.Length];
 
 		if (file.points.Length == 0) return;
 
 		for (int i = 0; i < vertices.Length; i++)
 			vertices[i] = file.points[i].xyz;
 
-		KDTree tree = new KDTree();
+		tree = new KDTree();
 		tree.Build(vertices);
+
+		int numThreads = Environment.ProcessorCount * 2;
+		var doneEvents = new ManualResetEvent[numThreads];
+		for (int tIx = 0; tIx < numThreads; tIx++)
+			{
+			doneEvents[tIx] = new ManualResetEvent(false);
+			var start = (vertices.Length / numThreads) * tIx;
+			var end = (vertices.Length / numThreads) * (tIx + 1);
+			if (tIx == numThreads - 1) end = vertices.Length;
+			normCallbackData data = new normCallbackData();
+			data.start = start;
+			data.end = end;
+			data.resetEvent = doneEvents[tIx];
+			ThreadPool.QueueUserWorkItem(calcNormalCallback, data);
+			}
+
+		WaitHandle.WaitAll(doneEvents);
+		normBuffer.SetData(normals);
+		}
+
+	internal static KDTree tree;
+	internal static Vector3[] normals;
+	internal static Vector3[] vertices;
+	internal class normCallbackData
+		{
+		public int start;
+		public int end;
+		public ManualResetEvent resetEvent;
+		}
+	internal static void calcNormalCallback(object o)
+		{
+		var data = (normCallbackData)o;
 
 		int k = 8;
 		float kInverse = 1f / k;
 		KDQuery query = new KDQuery();
 		var resultIndices = new List<int>(8);
-		for (int i = 0; i < vertices.Length; i++)
+		for (int i = data.start; i < data.end; i++)
 			{
 			resultIndices.Clear();
 			query.KNearest(tree, vertices[i], k, resultIndices);
@@ -170,7 +203,7 @@ public class PointCloudObject : MonoBehaviour
 			normals[i] = normal;
 			}
 
-		normBuffer.SetData(normals);
+		data.resetEvent.Set();
 		}
 
 	internal void setMatDefaults()
