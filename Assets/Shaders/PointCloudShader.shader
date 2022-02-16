@@ -5,10 +5,11 @@
 		_MainTex("Texture", 2D) = "white" {}
 		_TriggerPress("triggerpress", Int) = 0 // 0 for off, 1 for on
 		_DisplayNormals("hasnormals", Int) = 0 // 0 for off, 1 for on
+		_DisplayRoundPoints("roundpoints", Int) = 0 // 0 for off, 1 for on
+		_DisplayRadius("displayradius", Float) = 0.005
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
 		_EditCol("editCol", Color) = (0.95, 0.88, 0.03, 0)
 		_EditRadius("editradius", Float) = 0.015
-		_DisplayRadius("displayradius", Float) = 0.005
 	}
 		SubShader
 	{
@@ -23,6 +24,7 @@
 			sampler2D _MainTex;
 			int _TriggerPress;
 			int _DisplayNormals;
+			int _DisplayRoundPoints;
 			float4 _EditPos;
 			float4 _EditCol;
 			float _EditRadius;
@@ -131,14 +133,18 @@
 			fixed4 frag(g2f i) : SV_Target
 			{
 				float4 col = i.col;
-				float x = i.uv.x;
-				float y = i.uv.y;
-				float dist = sqrt(pow((0.5 - x), 2) + pow((0.5 - y), 2));
-				if (dist > 0.5) {
-					discard;
-				}
-				else {
-					col = i.col;
+
+				if (_DisplayRoundPoints)
+				{
+					float x = i.uv.x;
+					float y = i.uv.y;
+					float dist = sqrt(pow((0.5 - x), 2) + pow((0.5 - y), 2));
+					if (dist > 0.5) {
+						discard;
+					}
+					else {
+						col = i.col;
+					}
 				}
 
 				return col;

@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using UnityEngine;
 
 public struct LasStruct
 	{
+	public string fullFileName;
 	public LasHeader header;
 	public LasPoint[] points;
 	}

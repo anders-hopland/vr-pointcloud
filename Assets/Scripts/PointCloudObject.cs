@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using UnityEngine;
 
@@ -15,7 +16,8 @@ public class PointCloudObject : MonoBehaviour
 	internal LasStruct[] files;
 	internal int curtFileIx;
 	internal bool displayNormals;
-	internal float displayRadius;
+	internal bool displayRoundPoints;
+	internal float displayRadius = 0.25f;
 	internal bool initialized;
 
 
@@ -40,6 +42,12 @@ public class PointCloudObject : MonoBehaviour
 		var display = go.GetComponent<PointCloudObject>();
 		display.displayNormals = StartScript.displayNormals;
 		display.setFile(lasFiles);
+
+		StartScript.sceneFloor.transform.position = new Vector3(
+			(float)(lasFiles[0].header.maxX + lasFiles[0].header.minX) / 2f,
+			(float)(lasFiles[0].header.maxY + lasFiles[0].header.minY) / 2f,
+			(float)lasFiles[0].header.minZ
+			);
 
 		return display;
 		}
@@ -75,36 +83,43 @@ public class PointCloudObject : MonoBehaviour
 		setPointCloud(this.files[0]);
 		}
 
+	// Work arrays for pushing data to GPU
+	internal static Vector3[] workvertices = new Vector3[250000];
+	internal static Color[] workcolors = new Color[250000];
 	internal void setPointCloud(LasStruct file)
 		{
 		init();
-		var vertices = new Vector3[file.points.Length];
-		var colors = new Color[file.points.Length];
-		var indices = new int[file.points.Length];
 
 		if (displayNormals)
 			calcNormals(file);
 
-		setMatDefaults();
+		int[] indices = new int[file.points.Length];
 
-		// Scale down
-		if (file.points.Length > 0)
+		if (workvertices.Length < file.points.Length)
 			{
-			for (int i = 0; i < vertices.Length; i++)
-				{
-				vertices[i] = file.points[i].xyz * 0.1f;
-				colors[i] = file.points[i].col;
-				indices[i] = i;
-				}
+			workvertices = new Vector3[(int)(file.points.Length * 1.25f)];
+			workcolors = new Color[(int)(file.points.Length * 1.25f)];
 			}
 
-		mf.mesh.SetVertices(vertices);
-		mf.mesh.SetIndices(indices, MeshTopology.Points, 0);
+		setMatDefaults();
 
-		vertBuffer.SetData(vertices);
-		colBuffer.SetData(colors);
+		for (int i = 0; i < file.points.Length; i++)
+			{
+			workvertices[i] = file.points[i].xyz;
+			workcolors[i] = file.points[i].col;
+			indices[i] = i;
+			}
 
-		StartScript.ui.updateStatistics("Point Cloud", file.points.Length);
+		mf.mesh.SetVertices(workvertices, 0, file.points.Length);
+		mf.mesh.SetIndices(indices, 0, file.points.Length, MeshTopology.Points, 0);
+
+		vertBuffer.SetData(workvertices, 0, 0, file.points.Length);
+		colBuffer.SetData(workcolors, 0, 0, file.points.Length);
+
+		ThreadPool.QueueUserWorkItem((object data) =>
+		{
+			StartScript.ui.updateStatistics(Path.GetFileName(file.fullFileName), file.points.Length);
+		});
 		}
 
 	// Based on: https://www.ilikebigbits.com/2015_03_04_plane_from_points.html
@@ -208,7 +223,7 @@ public class PointCloudObject : MonoBehaviour
 
 	internal void setMatDefaults()
 		{
-		setMatDisplayRad(0.02f);
+		setMatDisplayRad(displayRadius);
 		setMatEditCol(Color.yellow);
 		setMatDisplayNormals(displayNormals);
 
@@ -232,7 +247,7 @@ public class PointCloudObject : MonoBehaviour
 	internal void setMatEditRad(float rad)
 		{
 		if (mr == null) return;
-		mr.material.SetFloat("_EditRadius", rad * (1f /StartScript.sceneRootScale));
+		mr.material.SetFloat("_EditRadius", rad * (1f / StartScript.sceneRootScale));
 		}
 	internal void setMatDisplayRad(float rad)
 		{
@@ -264,6 +279,13 @@ public class PointCloudObject : MonoBehaviour
 		if (mr == null) return;
 		this.displayNormals = displayNormals;
 		mr.material.SetFloat("_DisplayNormals", displayNormals ? 1 : 0);
+		}
+
+	internal void setMatDisplayRoundPoints(bool displayRoundPoints)
+		{
+		if (mr == null) return;
+		this.displayRoundPoints = displayRoundPoints;
+		mr.material.SetFloat("_DisplayRoundPoints", displayRoundPoints ? 1 : 0);
 		}
 
 	internal void setMatTriggerPress(bool press)
@@ -298,9 +320,19 @@ public class PointCloudObject : MonoBehaviour
 			{
 			tempColBuffer = new Color[(int)(files[curtFileIx].points.Length * 1.5f)];
 			}
+
 		colBuffer.GetData(tempColBuffer, 0, 0, files[curtFileIx].points.Length);
-		for (int i = 0; i < files[curtFileIx].points.Length; i++)
-			files[curtFileIx].points[i].col = tempColBuffer[i];
+		ThreadPool.QueueUserWorkItem((object data) =>
+			{
+				lock (tempColBuffer)
+					{
+					Color[] buf = (Color[])data;
+					for (int i = 0; i < files[curtFileIx].points.Length; i++)
+						files[curtFileIx].points[i].col = buf[i];
+					}
+			},
+			tempColBuffer);
+
 		}
 
 	private void OnDisable()

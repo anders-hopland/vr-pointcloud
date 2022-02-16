@@ -14,6 +14,7 @@ public class LasReader
 		LasStruct lasFile = new LasStruct();
 		if (!File.Exists(fileName)) return lasFile;
 		FileStream fs = File.Open(fileName, FileMode.Open);
+		lasFile.fullFileName = fileName;
 		LasHeader header = readLasHeader(fs);
 		LasPoint[] lasPoints = readLasPoints(fs, header);
 

@@ -47,6 +47,8 @@ public class UIManager
 		addListenerVrDesktop("NextPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.next));
 		addListenerVrDesktop("LayerDropdown", "Dropdown", (int newIndex) => layerDropdownCallback(newIndex));
 		addListenerVrDesktop("NormalsToggle", "Toggle", (bool val) => { displayNormalsToggleCallback(val); });
+		addListenerVrDesktop("DisplayRoundPointsToggle", "Toggle", (bool val) => { displayRoundPointsToggleCallback(val); });
+		addListenerVrDesktop("DisplayFloorToggle", "Toggle", (bool val) => { StartScript.sceneFloor.SetActive(val); });
 		addListenerVrDesktop("LowerPointRadBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.decreasedisplayrad));
 		addListenerVrDesktop("HigherPointRadBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.increasedisplayrad));
 		}
@@ -184,6 +186,11 @@ public class UIManager
 	internal void displayNormalsToggleCallback(bool val)
 		{
 		StartScript.displayNormals = val;
+		}
+
+	internal void displayRoundPointsToggleCallback(bool val)
+		{
+		StartScript.displayRoundPoints = val;
 		}
 
 	internal void quitApplicationCallback()
