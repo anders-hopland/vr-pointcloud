@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using UnityEngine;
 
-public struct LasStruct
+public class LasFile
 	{
 	public string fullFileName;
 	public LasHeader header;

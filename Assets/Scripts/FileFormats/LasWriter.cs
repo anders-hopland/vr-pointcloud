@@ -5,7 +5,7 @@ using System.IO;
 
 public class LasWriter
 	{
-	public static void writeLASFile(LasStruct lasFile, string fileName)
+	public static void writeLASFile(LasFile lasFile, string fileName)
 		{
 		//if (File.Exists(fileName)) return;
 		FileStream fs = File.Open(fileName, FileMode.Create);
@@ -41,7 +41,6 @@ public class LasWriter
 
 		for (int i = 0; i < 32; i++)
 			bytes[58 + i] = header.generatingSoftware[i];
-
 
 		temp = BitConverter.GetBytes((ushort)System.DateTime.Today.Day);
 		Array.Copy(temp, 0, bytes, 90, 2);

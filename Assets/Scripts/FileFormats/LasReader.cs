@@ -9,9 +9,9 @@ public class LasReader
 	/// </summary>
 	/// <param name="fileName"></param>
 	/// <returns></returns>
-	public static LasStruct readLASFile(string fileName)
+	public static LasFile readLASFile(string fileName)
 		{
-		LasStruct lasFile = new LasStruct();
+		LasFile lasFile = new LasFile();
 		if (!File.Exists(fileName)) return lasFile;
 		FileStream fs = File.Open(fileName, FileMode.Open);
 		lasFile.fullFileName = fileName;

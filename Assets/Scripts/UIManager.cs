@@ -139,11 +139,14 @@ public class UIManager
 		// Sorting on filename, filenames should be on the form filnamefilter<1> ... filenameFilter<N>
 		Array.Sort(fileNames);
 
-		var lasFiles = new LasStruct[fileNames.Length];
+		var pointClouds = new PointCloudObject[fileNames.Length];
 		for (int i = 0; i < fileNames.Length; i++)
-			lasFiles[i] = LasReader.readLASFile(fileNames[i]);
+			{
+			var lasFile = LasReader.readLASFile(fileNames[i]);
+			pointClouds[i] = new PointCloudObject(lasFile, StartScript.displayNormals);
+			}
 
-		StartScript.display = PointCloudObject.newPointCloudObject(lasFiles);
+		StartScript.display = PointCloudManager.newPointCloudObject(pointClouds);
 		}
 
 	internal TextMeshProUGUI statisticsObjectNameVr;

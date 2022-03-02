@@ -9,7 +9,7 @@ namespace Tests
 	[TestFixture]
 	public class NewTestScript
 		{
-		private LasStruct file;
+		private LasFile file;
 
 		[OneTimeSetUp]
 		public void SetUp()

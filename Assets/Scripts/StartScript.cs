@@ -10,13 +10,14 @@ using SFB;
 public class StartScript : MonoBehaviour
 	{
 	internal static int curLasFileIndex = 0;
-	internal static PointCloudObject display;
+	internal static PointCloudManager display;
 	internal static UIManager ui;
 	internal static GameObject sceneRoot;
 	internal static GameObject sceneFloor;
 	internal static float sceneRootScale = 1f;
 	internal static bool displayNormals = false;
 	internal static bool _displayRoundPoints = false;
+	internal static bool bufferPrevNextPointCloud;
 	internal static bool displayRoundPoints
 		{
 		get
@@ -36,22 +37,19 @@ public class StartScript : MonoBehaviour
 		ui = new UIManager();
 		sceneRoot = GameObject.Find("SceneElemRoot");
 		sceneFloor = GameObject.Find("SceneFloor");
+		ComputeBufferManager.init();
 		}
 
 	// Update is called once per frame
 	void Update()
 		{
+		// Hide / show desktop menu
 		if (Input.GetKeyDown("m"))
 			ui.desktopMenuRoot.SetActive(!ui.desktopMenuRoot.activeSelf);
 		}
 
-	private void OnDisable()
+	private void OnDestroy()
 		{
-		
-		}
-
-	internal static void setActiveDisplayObject(PointCloudObject pointCloud)
-		{
-		display = pointCloud;
+		ComputeBufferManager.dispose();
 		}
 	}

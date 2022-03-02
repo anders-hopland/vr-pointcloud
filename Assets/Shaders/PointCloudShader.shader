@@ -6,6 +6,7 @@
 		_TriggerPress("triggerpress", Int) = 0 // 0 for off, 1 for on
 		_DisplayNormals("hasnormals", Int) = 0 // 0 for off, 1 for on
 		_DisplayRoundPoints("roundpoints", Int) = 0 // 0 for off, 1 for on
+		_CbOffset("computebufferoffset", Int) = 0
 		_DisplayRadius("displayradius", Float) = 0.005
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
 		_EditCol("editCol", Color) = (0.95, 0.88, 0.03, 0)
@@ -25,6 +26,7 @@
 			int _TriggerPress;
 			int _DisplayNormals;
 			int _DisplayRoundPoints;
+			int _CbOffset;
 			float4 _EditPos;
 			float4 _EditCol;
 			float _EditRadius;
@@ -51,19 +53,20 @@
 			v2g vert(appdata v)
 			{
 				v2g o;
-				float4 position = float4(vertsBuf[v.ix].xyz, 0);
-				float4 normal = float4(normsBuf[v.ix].xyz, 0);
+				int ix = v.ix + _CbOffset;
+				float4 position = float4(vertsBuf[ix].xyz, 0);
+				float4 normal = float4(normsBuf[ix].xyz, 0);
 				
 				// Paint / mark point cloud
 				if (_TriggerPress == 1)
 				{
 					if (distance(position.xyz, _EditPos.xyz) < _EditRadius) {
-						colsBuf[v.ix] = _EditCol;
+						colsBuf[ix] = _EditCol;
 					}
 				}
 				o.vertex = position;
 				o.normal = normal;
-				o.col = colsBuf[v.ix];
+				o.col = colsBuf[ix];
 
 				return o;
 			}
