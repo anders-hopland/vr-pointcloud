@@ -79,7 +79,6 @@ public class LasReader
 		header.minY = BitConverter.ToDouble(bytes, 203);
 		header.maxZ = BitConverter.ToDouble(bytes, 211);
 		header.minZ = BitConverter.ToDouble(bytes, 219);
-		header.startOfWaveformDataPacket = BitConverter.ToUInt64(bytes, 227);
 
 		return header;
 		}
@@ -89,14 +88,23 @@ public class LasReader
 		LasPoint[] lasPoints = new LasPoint[header.numPoints];
 		int lasFormat = header.pointDataFormat;
 
-		byte[] bytes = new byte[header.pointDataLength];
+		byte[] bytebuf;
+		int numToRead = 500;
+		if (lasPoints.Length > numToRead)
+			bytebuf = new byte[header.pointDataLength * numToRead];
+		else
+			bytebuf = new byte[header.pointDataLength * lasPoints.Length];
 		file.Position = header.offsetToData;
 
-		// TODO: Chunk reading into e.g 4KB per read
+		byte[] bytes = new byte[header.pointDataLength];
 
 		for (int i = 0; i < lasPoints.Length; i++)
 			{
-			file.Read(bytes, 0, (int)header.pointDataLength);
+			if (i % numToRead == 0)
+				file.Read(bytebuf, 0, Math.Min(numToRead, lasPoints.Length - i) * header.pointDataLength);
+
+			Array.Copy(bytebuf, header.pointDataLength * (i % numToRead), bytes, 0, header.pointDataLength);
+
 			if (lasFormat == 0) lasPoints[i] = getLasPointV0(bytes);
 			else if (lasFormat == 1) lasPoints[i] = getLasPointV1(bytes);
 			else if (lasFormat == 2) lasPoints[i] = getLasPointV2(bytes);
@@ -106,8 +114,11 @@ public class LasReader
 		for (int i = 0; i < lasPoints.Length; i++)
 			{
 			lasPoints[i].xyz.x *= (float)header.xScaleFactor;
+			lasPoints[i].xyz.x += (float)header.xOffset;
 			lasPoints[i].xyz.y *= (float)header.yScaleFactor;
+			lasPoints[i].xyz.y += (float)header.yOffset;
 			lasPoints[i].xyz.z *= (float)header.zScaleFactor;
+			lasPoints[i].xyz.z += (float)header.zOffset;
 			}
 
 		return lasPoints;
@@ -115,39 +126,45 @@ public class LasReader
 
 	private static LasPoint getLasPointV0(byte[] bytes)
 		{
-		LasPoint ret = new LasPoint();
-		ret.xyz = new UnityEngine.Vector3(
+		LasPoint point = new LasPoint();
+		point.xyz = new UnityEngine.Vector3(
 			BitConverter.ToInt32(bytes, 0),
 			BitConverter.ToInt32(bytes, 4),
 			BitConverter.ToInt32(bytes, 8)
 			);
-		ret.instensity = BitConverter.ToUInt16(bytes, 12);
+		point.instensity = BitConverter.ToUInt16(bytes, 12);
+		point.returnNumber = (byte)((int)bytes[14] & 0x7);
+		point.numberOfReturns = (byte)(((int)bytes[14] >> 3) & 0x7);
+		point.scanDirectionFlag = (byte)(((int)bytes[14] >> 6) & 0x1);
+		point.edgeOfFlightLine = (byte)(((int)bytes[14] >> 7) & 0x1);
+		point.classification = bytes[15];
+		point.scanAngleRank = bytes[16];
+		point.userData = bytes[17];
+		point.pointSourceId = BitConverter.ToUInt16(bytes, 18);
 
-		ret.classification = bytes[15];
-		ret.scanAngleRank = bytes[16];
-		ret.userData = bytes[17];
-		ret.pointSourceId = BitConverter.ToUInt16(bytes, 18);
-
-		return ret;
+		return point;
 		}
 
 	private static LasPoint getLasPointV1(byte[] bytes)
 		{
-		LasPoint ret = new LasPoint();
-		ret.xyz = new UnityEngine.Vector3(
+		LasPoint point = new LasPoint();
+		point.xyz = new UnityEngine.Vector3(
 			BitConverter.ToInt32(bytes, 0),
 			BitConverter.ToInt32(bytes, 4),
 			BitConverter.ToInt32(bytes, 8)
 			);
-		ret.instensity = BitConverter.ToUInt16(bytes, 12);
+		point.instensity = BitConverter.ToUInt16(bytes, 12);
+		point.returnNumber = (byte)((int)bytes[14] & 0x7);
+		point.numberOfReturns = (byte)(((int)bytes[14] >> 3) & 0x7);
+		point.scanDirectionFlag = (byte)(((int)bytes[14] >> 6) & 0x1);
+		point.edgeOfFlightLine = (byte)(((int)bytes[14] >> 7) & 0x1);
+		point.classification = bytes[15];
+		point.scanAngleRank = bytes[16];
+		point.userData = bytes[17];
+		point.pointSourceId = BitConverter.ToUInt16(bytes, 18);
+		point.GPSTime = BitConverter.ToDouble(bytes, 20);
 
-		ret.classification = bytes[15];
-		ret.scanAngleRank = bytes[16];
-		ret.userData = bytes[17];
-		ret.pointSourceId = BitConverter.ToUInt16(bytes, 18);
-		ret.GPSTime = BitConverter.ToDouble(bytes, 20);
-
-		return ret;
+		return point;
 		}
 
 	private static LasPoint getLasPointV2(byte[] bytes)
@@ -159,7 +176,10 @@ public class LasReader
 			BitConverter.ToInt32(bytes, 8)
 			);
 		point.instensity = BitConverter.ToUInt16(bytes, 12);
-
+		point.returnNumber = (byte)((int)bytes[14] & 0x7);
+		point.numberOfReturns = (byte)(((int)bytes[14] >> 3) & 0x7);
+		point.scanDirectionFlag = (byte)(((int)bytes[14] >> 6) & 0x1);
+		point.edgeOfFlightLine = (byte)(((int)bytes[14] >> 7) & 0x1);
 		point.classification = bytes[15];
 		point.scanAngleRank = bytes[16];
 		point.userData = bytes[17];
@@ -182,13 +202,18 @@ public class LasReader
 			BitConverter.ToInt32(bytes, 4),
 			BitConverter.ToInt32(bytes, 8)
 			);
-		point.instensity = BitConverter.ToUInt16(bytes, 12);
 
+		point.instensity = BitConverter.ToUInt16(bytes, 12);
+		point.returnNumber = (byte)((int)bytes[14] & 0x7);
+		point.numberOfReturns = (byte)(((int)bytes[14] >> 3) & 0x7);
+		point.scanDirectionFlag = (byte)(((int)bytes[14] >> 6) & 0x1);
+		point.edgeOfFlightLine = (byte)(((int)bytes[14] >> 7) & 0x1);
 		point.classification = bytes[15];
 		point.scanAngleRank = bytes[16];
 		point.userData = bytes[17];
 		point.pointSourceId = BitConverter.ToUInt16(bytes, 18);
 		point.GPSTime = BitConverter.ToDouble(bytes, 20);
+
 
 		point.col = new UnityEngine.Color(
 			BitConverter.ToUInt16(bytes, 28),

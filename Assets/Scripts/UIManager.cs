@@ -7,6 +7,8 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using TMPro;
+using System.IO;
+
 public class UIManager
 	{
 
@@ -42,7 +44,8 @@ public class UIManager
 	internal void registerCallBacks()
 		{
 		addListenerVrDesktop("ExitProgramButton", "Button", () => quitApplicationCallback());
-		addListenerVrDesktop("loadPointCloudBtn", "Button", () => openFileLoadDialog());
+		addListenerVrDesktop("loadPointCloudBtn", "Button", () => openFileDialog());
+		addListenerVrDesktop("savePointCloudBtn", "Button", () => saveFileDialog());
 		addListenerVrDesktop("PrevPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.prev));
 		addListenerVrDesktop("NextPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.next));
 		addListenerVrDesktop("LayerDropdown", "Dropdown", (int newIndex) => layerDropdownCallback(newIndex));
@@ -125,7 +128,7 @@ public class UIManager
 			}
 		}
 
-	internal void openFileLoadDialog()
+	internal void openFileDialog()
 		{
 		// Open file dialog with filter
 		var extensions = new[] {
@@ -149,6 +152,35 @@ public class UIManager
 		StartScript.display = PointCloudManager.newPointCloudObject(pointClouds);
 		}
 
+	internal void saveFileDialog()
+		{
+
+		if (StartScript.display == null) return;
+		if (StartScript.display.files.Length == 1)
+			{
+			// Open file dialog with filter
+			var extensions = new[] {
+				new ExtensionFilter("Point Cloud", "las"),
+				};
+			string fullname = StandaloneFileBrowser.SaveFilePanel("Save file", "", "newpointcloud", "las");
+			if (fullname == null || fullname == "") return;
+			LasWriter.writeLASFile(StartScript.display.files[0].file, fullname);
+			}
+		else
+			{
+			var folders = StandaloneFileBrowser.OpenFolderPanel("Choose folder to save to", "", false);
+
+			// We only get one folder
+			if (folders == null || folders.Length == 0) return;
+			foreach (var pc in StartScript.display.files)
+				{
+				string filename = Path.Combine(folders[0], pc.file.fullFileName);
+
+				LasWriter.writeLASFile(pc.file, filename);
+				}
+			}
+		}
+
 	internal TextMeshProUGUI statisticsObjectNameVr;
 	internal TextMeshProUGUI statisticsPointCountVr;
 	internal TextMeshProUGUI statisticsPointCountDesktop;
@@ -159,7 +191,7 @@ public class UIManager
 			statisticsPointCountVr = Helpers.findGameObjectComponent(vrMenuRoot, "TextMeshProUGUI", "StatisticsPointCount") as TextMeshProUGUI;
 		if (statisticsPointCountDesktop == null)
 			statisticsPointCountDesktop = Helpers.findGameObjectComponent(desktopMenuRoot, "TextMeshProUGUI", "StatisticsPointCount") as TextMeshProUGUI;
-		
+
 		if (statisticsObjectNameVr == null)
 			statisticsObjectNameVr = Helpers.findGameObjectComponent(vrMenuRoot, "TextMeshProUGUI", "StatisticsObjectName") as TextMeshProUGUI;
 		if (statisticsObjectNameDesktop == null)

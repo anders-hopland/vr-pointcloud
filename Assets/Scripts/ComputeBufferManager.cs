@@ -11,7 +11,7 @@ public static class ComputeBufferManager
 
 	internal static int updateCounter = -1;
 	internal static int numSlots = 3;
-	internal static int numElemsPerSlot = 200000;
+	internal static int numElemsPerSlot = 1000000; // Not dynamic for now, as we only work with small point clouds for now
 	internal class bufferSlot
 		{
 		public PointCloudObject pc;
@@ -34,19 +34,18 @@ public static class ComputeBufferManager
 		{
 		if (initialized) return;
 
-		vertBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, 4 * 3); // 4 bytes per float, 3 floats		
+		vertBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, sizeof(float) * 3); // 4 bytes per float, 3 floats		
 		Graphics.SetRandomWriteTarget(1, vertBuffer);
 
-		normBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, 4 * 3);
+		normBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, sizeof(float) * 3);
 		Graphics.SetRandomWriteTarget(2, normBuffer);
 
-		colBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, 4 * 4);
+		colBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, sizeof(float) * 4);
 		Graphics.SetRandomWriteTarget(3, colBuffer);
 
 		slots = new List<bufferSlot>();
-		slots.Add(new bufferSlot(null, updateCounter, 0));
-		slots.Add(new bufferSlot(null, updateCounter, colBuffer.count / 3));
-		slots.Add(new bufferSlot(null, updateCounter, (colBuffer.count / 3) * 2));
+		for (int i = 0; i < numSlots; i++)
+			slots.Add(new bufferSlot(null, updateCounter, (colBuffer.count / 3) * i));
 
 		initialized = true;
 		}

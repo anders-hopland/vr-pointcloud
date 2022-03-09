@@ -32,11 +32,14 @@ public class PointCloudManager : MonoBehaviour
 
 	public static PointCloudManager newPointCloudObject(PointCloudObject[] pointClouds)
 		{
-		var go = GameObject.CreatePrimitive(PrimitiveType.Plane);
-		go.GetComponent<MeshFilter>().mesh = new Mesh(); // Clear mesh
+		//var go = GameObject.CreatePrimitive(PrimitiveType.Plane);
+		var go = new GameObject();
+		//go.GetComponent<MeshFilter>().mesh = new Mesh(); // Clear mesh
 		go.name = "PointCloud";
 		go.AddComponent<PointCloudManager>();
-		go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
+		go.AddComponent<MeshFilter>();
+		go.AddComponent<MeshRenderer>();
+		//go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
 		go.transform.parent = StartScript.sceneRoot.transform;
 		var display = go.GetComponent<PointCloudManager>();
 		display.displayNormals = StartScript.displayNormals;
@@ -81,12 +84,12 @@ public class PointCloudManager : MonoBehaviour
 		if (indices == null || indices.Length < pc.points.Length)
 			{
 			indices = new int[(int)(pc.points.Length * 1.25f)];
-			for (int i = 0; i < pc.points.Length; i++)
+			for (int i = 0; i < indices.Length; i++)
 				indices[i] = i;
 			}
 
 		setMatDefaults();
-
+		mf.mesh.indexFormat = IndexFormat.UInt32;
 		mf.mesh.SetVertices(pc.points, 0, pc.points.Length);
 		mf.mesh.SetIndices(indices, 0, pc.points.Length, MeshTopology.Points, 0);
 

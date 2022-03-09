@@ -45,7 +45,6 @@ public struct LasHeader
 	public double minY; // 200
 	public double maxZ; // 208
 	public double minZ; // 216
-	public ulong startOfWaveformDataPacket; // 224
 	}
 
 public struct LasPoint
