@@ -12,7 +12,7 @@ public class VR_Actions : MonoBehaviour
 	internal GameObject leftHandGo;
 	internal GameObject rightHandGo;
 	internal GameObject sceneRoot;
-	internal GameObject editSphere;
+	internal GameObject labelSphere;
 	internal List<GameObject> menuItems;
 
 	internal bool grabbingRight;
@@ -38,10 +38,8 @@ public class VR_Actions : MonoBehaviour
 		leftHandGo = GameObject.Find("Controller (left)");
 		rightHandGo = GameObject.Find("Controller (right)");
 		sceneRoot = GameObject.Find("SceneElemRoot");
-		editSphere = GameObject.Find("EditSphere");
-		editSphereRad = editSphere.transform.localScale.x / 2f;
-		baseEditSpherePos = editSphere.transform.localPosition;
-		baseEditSpherePos -= new Vector3(0, editSphereRad, editSphereRad);
+		labelSphere = GameObject.Find("LabelSphere");
+		editSphereRad = labelSphere.transform.localScale.x / 2f;
 
 		menuItems = new List<GameObject>();
 		GameObject go = GameObject.Find("ButtonLayer1");
@@ -55,7 +53,6 @@ public class VR_Actions : MonoBehaviour
 		}
 
 	internal float editSphereRad = 1f;
-	internal Vector3 baseEditSpherePos;
 	void Update()
 		{
 		checkJoystickResize();
@@ -74,11 +71,15 @@ public class VR_Actions : MonoBehaviour
 		var axis = SteamVR_Input.GetVector2("joystick", rightHand);
 		if (axis.sqrMagnitude > 0)
 			{
-			editSphereRad += axis.x * 0.0015f;
-			if (editSphereRad < 0.015f) editSphereRad = 0.015f;
-			else if (editSphereRad > 0.15f) editSphereRad = 0.15f;
-			editSphere.transform.localScale = Vector3.one * editSphereRad * 2; // Diameter is radius * 2
-			
+			float radIncrease = axis.x * 0.0015f;
+			if (editSphereRad + radIncrease <= 0.015f) radIncrease = 0.015f - editSphereRad;
+			if (editSphereRad + radIncrease >= 0.15f) radIncrease = 0.15f - editSphereRad;
+			editSphereRad += radIncrease;
+
+			//if (editSphereRad < 0.015f) { editSphereRad = 0.015f; }
+			//else if (editSphereRad > 0.15f) { editSphereRad = 0.15f; }
+			labelSphere.transform.localScale = Vector3.one * editSphereRad * 2; // Diameter is radius * 2
+			labelSphere.transform.localPosition += new Vector3(0, radIncrease, radIncrease);
 			}
 		}
 
@@ -151,7 +152,7 @@ public class VR_Actions : MonoBehaviour
 	internal void updateShaderParams()
 		{
 		if (StartScript.display == null) return;
-		var newEditPos = StartScript.display.transform.InverseTransformPoint(editSphere.transform.position);
+		var newEditPos = StartScript.display.transform.InverseTransformPoint(labelSphere.transform.position);
 		EventHandler.registerEvent(EventHandler.events.seteditpos, newEditPos);
 		EventHandler.registerEvent(EventHandler.events.seteditradius, editSphereRad);
 		EventHandler.registerEvent(EventHandler.events.updatedisplayrad);

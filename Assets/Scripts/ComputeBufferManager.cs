@@ -12,6 +12,8 @@ public static class ComputeBufferManager
 	internal static int updateCounter = -1;
 	internal static int numSlots = 3;
 	internal static int numElemsPerSlot = 1000000; // Not dynamic for now, as we only work with small point clouds for now
+	internal static List<bufferSlot> slots;
+	private static bool initialized;
 	internal class bufferSlot
 		{
 		public PointCloudObject pc;
@@ -26,10 +28,6 @@ public static class ComputeBufferManager
 			}
 		}
 
-	internal static List<bufferSlot> slots;
-
-
-	private static bool initialized;
 	internal static void init()
 		{
 		if (initialized) return;

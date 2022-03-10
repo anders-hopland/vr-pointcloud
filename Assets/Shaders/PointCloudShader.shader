@@ -10,7 +10,14 @@
 		_DisplayRadius("displayradius", Float) = 0.005
 		_EditPos("editpos", Vector) = (0, 0, 0, 0)
 		_EditCol("editCol", Color) = (0.95, 0.88, 0.03, 0)
+		_HoverCol("hoverCol", Color) = (0.99, 0.02, 0.99, 0)
 		_EditRadius("editradius", Float) = 0.015
+
+		// Params needed for height color gradient view mode
+		_MinHeight("minHeight", Float) = 0
+		_MaxHeight("maxHeight", Float) = 1
+		_HeightCol1("heightCol1", Color) = (0.99, 0.98, 0.43, 0)
+		_HeightCol2("heightCol2", Color) = (0.65, 0.45, 0.98, 0)
 	}
 		SubShader
 	{
@@ -29,8 +36,14 @@
 			int _CbOffset;
 			float4 _EditPos;
 			float4 _EditCol;
+			float4 _HoverCol;
 			float _EditRadius;
 			float _DisplayRadius;
+
+			float _MinHeight;
+			float _MaxHeight;
+			float4 _HeightCol1;
+			float4 _HeightCol2;
 		
 			struct appdata
 			{
@@ -55,18 +68,22 @@
 				v2g o;
 				int ix = v.ix + _CbOffset;
 				float4 position = float4(vertsBuf[ix].xyz, 0);
-				float4 normal = float4(normsBuf[ix].xyz, 0);
+				o.vertex = position;
+				o.normal = float4(normsBuf[ix].xyz, 0);
+				o.col = colsBuf[ix];
 				
-				// Paint / mark point cloud
-				if (_TriggerPress == 1)
-				{
-					if (distance(position.xyz, _EditPos.xyz) < _EditRadius) {
+				// Paint / hover / mark point cloud
+				if (distance(position.xyz, _EditPos.xyz) < _EditRadius) {
+					if (_TriggerPress == 1)
+					{
 						colsBuf[ix] = _EditCol;
+						o.col = _EditCol;
+					}
+					else
+					{
+						o.col = _HoverCol;
 					}
 				}
-				o.vertex = position;
-				o.normal = normal;
-				o.col = colsBuf[ix];
 
 				return o;
 			}

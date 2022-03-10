@@ -103,6 +103,7 @@ public class LasWriter
 		{
 		int lasFormat = header.pointDataFormat;
 
+		// Scale down
 		for (int i = 0; i < points.Length; i++)
 			{
 			points[i].xyz.x /= (float)header.xScaleFactor;

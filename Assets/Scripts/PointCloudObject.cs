@@ -134,10 +134,6 @@ public class PointCloudObject
 			if (data.Length == classification.Length)
 				data.CopyTo(classification);
 
-			// Apply classification as color for now
-			for (int i = 0; i < classification.Length; i++)
-				file.points[i].col = classification[i];
-
 			downloading = false;
 			}
 		}
