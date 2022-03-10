@@ -14,13 +14,15 @@ public class UIManager
 
 	internal static Color[] layerColors = new Color[]
 	{
-		Color.blue,
-		Color.red,
-		Color.white,
-		Color.yellow,
-		Color.green,
-		Color.gray,
-		Color.magenta
+		Color.blue, // Person
+		Color.red, // Car
+		Color.magenta, // Building
+		Color.green, // Tree
+		Color.gray, // Ground
+		Color.cyan, // Traffic Light
+		new Color(250f / 255f, 69f / 255f, 3f / 255f), // Traffic Sign
+		Color.white, // Truck
+		Color.yellow, // Bicycle
 	};
 
 	internal Dropdown layerDropdownDesktop;

@@ -32,14 +32,12 @@ public class PointCloudManager : MonoBehaviour
 
 	public static PointCloudManager newPointCloudObject(PointCloudObject[] pointClouds)
 		{
-		//var go = GameObject.CreatePrimitive(PrimitiveType.Plane);
 		var go = new GameObject();
-		//go.GetComponent<MeshFilter>().mesh = new Mesh(); // Clear mesh
 		go.name = "PointCloud";
 		go.AddComponent<PointCloudManager>();
 		go.AddComponent<MeshFilter>();
 		go.AddComponent<MeshRenderer>();
-		//go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
+		go.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Custom/PointCloudShader"));
 		go.transform.parent = StartScript.sceneRoot.transform;
 		var display = go.GetComponent<PointCloudManager>();
 		display.displayNormals = StartScript.displayNormals;
