@@ -10,23 +10,12 @@ public class PointCloudObject
 	{
 	internal LasFile file;
 	internal Vector3[] normals;
-	internal Vector3[] points;
-	internal Color[] colors;
-	internal int[] classification;
 	internal bool downloading;
+	internal string wantFileName; // File name top be used on async file write
 
 	public PointCloudObject(LasFile file, bool calculateNormals)
 		{
 		this.file = file;
-		points = new Vector3[file.points.Length];
-		colors = new Color[file.points.Length];
-		classification = new int[file.points.Length];
-
-		for (int i = 0; i < points.Length; i++)
-			{
-			points[i] = file.points[i].xyz;
-			colors[i] = file.points[i].col;
-			}
 
 		if (calculateNormals)
 			calcNormals();
@@ -35,8 +24,8 @@ public class PointCloudObject
 	internal class normCallbackData
 		{
 		public KDTree tree;
+		public LasFile lasFile;
 		public Vector3[] normals;
-		public Vector3[] points;
 		public int start;
 		public int end;
 		public ManualResetEvent resetEvent;
@@ -47,21 +36,25 @@ public class PointCloudObject
 		{
 		normals = new Vector3[file.points.Length];
 
+		var tempPoints = new Vector3[file.points.Length];
+		for (int i = 0; i < tempPoints.Length; i++)
+			tempPoints[i] = file.points[i].xyz;
+
 		var tree = new KDTree();
-		tree.Build(points);
+		tree.Build(tempPoints);
 
 		int numThreads = Environment.ProcessorCount * 2;
 		var doneEvents = new ManualResetEvent[numThreads];
 		for (int tIx = 0; tIx < numThreads; tIx++)
 			{
 			doneEvents[tIx] = new ManualResetEvent(false);
-			var start = (points.Length / numThreads) * tIx;
-			var end = (points.Length / numThreads) * (tIx + 1);
-			if (tIx == numThreads - 1) end = points.Length;
+			var start = (file.points.Length / numThreads) * tIx;
+			var end = (file.points.Length / numThreads) * (tIx + 1);
+			if (tIx == numThreads - 1) end = file.points.Length;
 			normCallbackData data = new normCallbackData();
 			data.tree = tree;
 			data.normals = normals;
-			data.points = points;
+			data.lasFile = file;
 			data.start = start;
 			data.end = end;
 			data.resetEvent = doneEvents[tIx];
@@ -82,10 +75,10 @@ public class PointCloudObject
 		for (int i = data.start; i < data.end; i++)
 			{
 			resultIndices.Clear();
-			query.KNearest(data.tree, data.points[i], k, resultIndices);
+			query.KNearest(data.tree, data.lasFile.points[i].xyz, k, resultIndices);
 			Vector3 sum = Vector3.zero;
 			for (int j = 0; j < k; j++)
-				sum += data.points[resultIndices[j]];
+				sum += data.lasFile.points[resultIndices[j]].xyz;
 
 			Vector3 centroid = sum * kInverse;
 
@@ -95,7 +88,7 @@ public class PointCloudObject
 
 			for (int j = 0; j < k; j++)
 				{
-				var p = data.points[resultIndices[j]] - centroid;
+				var p = data.lasFile.points[resultIndices[j]].xyz - centroid;
 				xx += p.x * p.x;
 				xy += p.x * p.y;
 				xz += p.x * p.z;
@@ -128,15 +121,36 @@ public class PointCloudObject
 		data.resetEvent.Set();
 		}
 
-	internal void downloadPointCloudCallback(AsyncGPUReadbackRequest request)
+	internal void downloadCallback(AsyncGPUReadbackRequest request)
 		{
 		if (!request.hasError)
 			{
 			var data = request.GetData<ComputeBufferManager.cbPoint>();
 			for (int i = 0; i < data.Length; i++)
-				classification[i] = data[i].classification;
+				file.points[i].classification = (byte)data[i].classification;
 
 			downloading = false;
+
+			}
+		}
+
+	internal void downloadAndSaveCallback(AsyncGPUReadbackRequest request)
+		{
+		if (!request.hasError)
+			{
+			var data = request.GetData<ComputeBufferManager.cbPoint>();
+			for (int i = 0; i < data.Length; i++)
+				{
+				if (data[i].classification != 0)
+					{
+					var wtf = 0;
+					}
+				file.points[i].classification = (byte)data[i].classification;
+				}
+
+
+			downloading = false;
+			LasWriter.writeLASFile(file, wantFileName);
 			}
 		}
 	}

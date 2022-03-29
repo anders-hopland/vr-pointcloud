@@ -13,7 +13,6 @@ public class PointCloudManager : MonoBehaviour
 	internal MeshFilter mf;
 	internal MeshRenderer mr;
 	internal PointCloudObject[] files;
-	internal int pointCloudBufOffset;
 	internal int curtFileIx;
 	internal bool displayNormals;
 	internal bool displayRoundPoints;
@@ -74,27 +73,30 @@ public class PointCloudManager : MonoBehaviour
 		}
 
 	// Work arrays for pushing data to GPU
+	internal static Vector3[] vertices;
 	internal static int[] indices;
 	internal void setPointCloud(PointCloudObject pc)
 		{
 		init();
 
-		if (indices == null || indices.Length < pc.points.Length)
+		if (indices == null || indices.Length < pc.file.points.Length)
 			{
-			indices = new int[(int)(pc.points.Length * 1.25f)];
+			indices = new int[(int)(pc.file.points.Length * 1.25f)];
+			vertices = new Vector3[indices.Length]; // No need to initialize vertices
 			for (int i = 0; i < indices.Length; i++)
-				indices[i] = i;
+				{ indices[i] = i; }
 			}
 
 		setMatDefaults();
 		mf.mesh.indexFormat = IndexFormat.UInt32;
-		mf.mesh.SetVertices(pc.points, 0, pc.points.Length);
-		mf.mesh.SetIndices(indices, 0, pc.points.Length, MeshTopology.Points, 0);
+		mf.mesh.SetVertices(vertices, 0, pc.file.points.Length);
+		mf.mesh.SetIndices(indices, 0, pc.file.points.Length, MeshTopology.Points, 0);
+		mf.mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 99999f); // To prevent culling, as we only have dummy vertices on mesh
 
 		int cbOffset = ComputeBufferManager.setPointCloud(pc, displayNormals);
 		setMatCbOffset(cbOffset);
 
-		StartScript.ui.updateStatistics(Path.GetFileName(pc.file.fullFileName), pc.points.Length);
+		StartScript.ui.updateStatistics(Path.GetFileName(pc.file.fullFileName), pc.file.points.Length);
 		}
 
 	internal void setMatDefaults()
@@ -177,7 +179,7 @@ public class PointCloudManager : MonoBehaviour
 
 	internal void nextPointCloud()
 		{
-		StartScript.ui.updateStatistics("Point Cloud", files[curtFileIx].points.Length);
+		StartScript.ui.updateStatistics("Point Cloud", files[curtFileIx].file.points.Length);
 		if (curtFileIx >= files.Length - 1) return;
 		curtFileIx++;
 		setPointCloud(files[curtFileIx]);
@@ -185,7 +187,7 @@ public class PointCloudManager : MonoBehaviour
 
 	internal void prevPointCloud()
 		{
-		StartScript.ui.updateStatistics("Point Cloud", files[curtFileIx].points.Length);
+		StartScript.ui.updateStatistics("Point Cloud", files[curtFileIx].file.points.Length);
 		if (curtFileIx <= 0) return;
 		curtFileIx--;
 		setPointCloud(files[curtFileIx]);

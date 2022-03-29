@@ -15,6 +15,7 @@ public class StartScript : MonoBehaviour
 	internal static GameObject sceneRoot;
 	internal static GameObject sceneFloor;
 	internal static float sceneRootScale = 1f;
+	internal static bool paused = false;
 	internal static bool displayNormals = false;
 	internal static bool _displayRoundPoints = false;
 	internal static bool displayRoundPoints

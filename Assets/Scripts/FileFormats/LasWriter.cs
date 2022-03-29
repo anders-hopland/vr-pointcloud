@@ -7,7 +7,6 @@ public class LasWriter
 	{
 	public static void writeLASFile(LasFile lasFile, string fileName)
 		{
-		//if (File.Exists(fileName)) return;
 		FileStream fs = File.Open(fileName, FileMode.Create);
 		writeLASHeader(fs, lasFile.header);
 		writeLASPoints(fs, lasFile.header, lasFile.points);

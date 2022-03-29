@@ -161,12 +161,12 @@ public class UIManager
 		if (StartScript.display.files.Length == 1)
 			{
 			// Open file dialog with filter
-			var extensions = new[] {
-				new ExtensionFilter("Point Cloud", "las"),
-				};
 			string fullname = StandaloneFileBrowser.SaveFilePanel("Save file", "", "newpointcloud", "las");
 			if (fullname == null || fullname == "") return;
-			LasWriter.writeLASFile(StartScript.display.files[0].file, fullname);
+			var pc = StartScript.display.files[StartScript.display.curtFileIx];
+			pc.wantFileName = fullname;
+			bool mustDownload = ComputeBufferManager.downLoadBeforeSave(pc);
+			if (!mustDownload) LasWriter.writeLASFile(pc.file, fullname);
 			}
 		else
 			{

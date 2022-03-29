@@ -106,7 +106,7 @@
 						}
 						else
 						{
-							o.col = pointBuf[ix].col;
+							o.col = dataBuf[pointBuf[ix].classification];
 						}
 					}
 					else if (_Displaymode == 2)

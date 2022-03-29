@@ -12,6 +12,7 @@ public static class ComputeBufferManager
 
 	internal static int updateCounter = -1;
 	internal static int numSlots = 3;
+	internal static int cbPointSize = UnsafeUtility.SizeOf<cbPoint>();
 	internal static int numElemsPerSlot = 1000000; // Not dynamic for now, as we only work with small point clouds for now
 	internal static List<bufferSlot> slots;
 	internal static Vector4[] data;
@@ -43,7 +44,6 @@ public static class ComputeBufferManager
 		{
 		if (initialized) return;
 
-		int cbPointSize = UnsafeUtility.SizeOf<cbPoint>();
 		pointBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, cbPointSize); // 4 bytes per float, 3 floats		
 		Graphics.SetRandomWriteTarget(1, pointBuffer);
 
@@ -97,25 +97,44 @@ public static class ComputeBufferManager
 		return cbOffset;
 		}
 
+	/// <summary>
+	/// Checks if point cloud has uncommitted data on GPU, returns true if download 
+	/// must be done, where it downloads and saves on download completion, if ready
+	/// returns false
+	/// </summary>
+	/// <returns></returns>
+	internal static bool downLoadBeforeSave(PointCloudObject pc)
+		{
+		StartScript.paused = true;
+		foreach (var slot in slots)
+			if (slot.pc == pc)
+				{
+				AsyncGPUReadback.Request(pointBuffer, slot.pc.file.points.Length * cbPointSize, slot.startIx, slot.pc.downloadAndSaveCallback);
+				return true;
+				}
+
+		return false;
+		}
+
 	internal static void downloadPointCloudAsync(bufferSlot slot)
 		{
 		slot.pc.downloading = true;
-		AsyncGPUReadback.Request(pointBuffer, pointBuffer.count / numSlots, slot.startIx, slot.pc.downloadPointCloudCallback);
+		AsyncGPUReadback.Request(pointBuffer, slot.pc.file.points.Length * cbPointSize, slot.startIx, slot.pc.downloadCallback);
 		}
 
 	internal static void uploadPointCloud(bufferSlot slot, bool displayNormals)
 		{
 		// Points, cols and norms have same length
-		cbPoint[] points = new cbPoint[slot.pc.points.Length];
-		for (int i = 0; i < slot.pc.points.Length; i++)
+		cbPoint[] cbPoints = new cbPoint[slot.pc.file.points.Length];
+		for (int i = 0; i < slot.pc.file.points.Length; i++)
 			{
-			points[i].vert = slot.pc.points[i];
-			points[i].col = slot.pc.colors[i];
-			if (slot.pc.normals != null) points[i].norm = slot.pc.normals[i];
-			points[i].classification = slot.pc.classification[i];
+			cbPoints[i].vert = slot.pc.file.points[i].xyz;
+			cbPoints[i].col = slot.pc.file.points[i].col;
+			if (slot.pc.normals != null) cbPoints[i].norm = slot.pc.normals[i];
+			cbPoints[i].classification = (int)slot.pc.file.points[i].classification;
 			}
 
-		pointBuffer.SetData(points, 0, slot.startIx, points.Length);
+		pointBuffer.SetData(cbPoints, 0, slot.startIx, cbPoints.Length);
 		}
 
 	/// <summary>
