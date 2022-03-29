@@ -17,7 +17,6 @@ public class StartScript : MonoBehaviour
 	internal static float sceneRootScale = 1f;
 	internal static bool displayNormals = false;
 	internal static bool _displayRoundPoints = false;
-	internal static bool bufferPrevNextPointCloud;
 	internal static bool displayRoundPoints
 		{
 		get
@@ -38,9 +37,9 @@ public class StartScript : MonoBehaviour
 		sceneRoot = GameObject.Find("SceneElemRoot");
 		sceneFloor = GameObject.Find("SceneFloor");
 		ComputeBufferManager.init();
+		ComputeBufferManager.uploadLabelColors(UIManager.labelColors);
 		}
 
-	// Update is called once per frame
 	void Update()
 		{
 		// Hide / show desktop menu

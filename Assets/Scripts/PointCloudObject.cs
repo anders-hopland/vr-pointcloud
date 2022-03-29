@@ -11,19 +11,21 @@ public class PointCloudObject
 	internal LasFile file;
 	internal Vector3[] normals;
 	internal Vector3[] points;
-	internal Color[] classification;
+	internal Color[] colors;
+	internal int[] classification;
 	internal bool downloading;
 
 	public PointCloudObject(LasFile file, bool calculateNormals)
 		{
 		this.file = file;
 		points = new Vector3[file.points.Length];
-		classification = new Color[file.points.Length];
+		colors = new Color[file.points.Length];
+		classification = new int[file.points.Length];
 
 		for (int i = 0; i < points.Length; i++)
 			{
 			points[i] = file.points[i].xyz;
-			classification[i] = file.points[i].col;
+			colors[i] = file.points[i].col;
 			}
 
 		if (calculateNormals)
@@ -130,9 +132,9 @@ public class PointCloudObject
 		{
 		if (!request.hasError)
 			{
-			var data = request.GetData<Color>();
-			if (data.Length == classification.Length)
-				data.CopyTo(classification);
+			var data = request.GetData<ComputeBufferManager.cbPoint>();
+			for (int i = 0; i < data.Length; i++)
+				classification[i] = data[i].classification;
 
 			downloading = false;
 			}

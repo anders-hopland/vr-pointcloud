@@ -1,18 +1,20 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Rendering;
 
 public static class ComputeBufferManager
 	{
-	internal static ComputeBuffer vertBuffer;
-	internal static ComputeBuffer normBuffer;
-	internal static ComputeBuffer colBuffer;
+	internal static ComputeBuffer dataBuffer; // Buffer to store arbitrary data
+	internal static ComputeBuffer pointBuffer;
 
 	internal static int updateCounter = -1;
 	internal static int numSlots = 3;
 	internal static int numElemsPerSlot = 1000000; // Not dynamic for now, as we only work with small point clouds for now
 	internal static List<bufferSlot> slots;
+	internal static Vector4[] data;
 	private static bool initialized;
 	internal class bufferSlot
 		{
@@ -28,22 +30,31 @@ public static class ComputeBufferManager
 			}
 		}
 
+	[StructLayout(LayoutKind.Sequential, Pack = 0)]
+	internal struct cbPoint
+		{
+		public Vector3 vert;
+		public Vector3 norm;
+		public Color col;
+		public int classification;
+		}
+
 	internal static void init()
 		{
 		if (initialized) return;
 
-		vertBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, sizeof(float) * 3); // 4 bytes per float, 3 floats		
-		Graphics.SetRandomWriteTarget(1, vertBuffer);
+		int cbPointSize = UnsafeUtility.SizeOf<cbPoint>();
+		pointBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, cbPointSize); // 4 bytes per float, 3 floats		
+		Graphics.SetRandomWriteTarget(1, pointBuffer);
 
-		normBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, sizeof(float) * 3);
-		Graphics.SetRandomWriteTarget(2, normBuffer);
-
-		colBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, sizeof(float) * 4);
-		Graphics.SetRandomWriteTarget(3, colBuffer);
+		// Buffer for various data
+		data = new Vector4[1024];
+		dataBuffer = new ComputeBuffer(1024, sizeof(float) * 4);
+		Graphics.SetRandomWriteTarget(2, dataBuffer);
 
 		slots = new List<bufferSlot>();
 		for (int i = 0; i < numSlots; i++)
-			slots.Add(new bufferSlot(null, updateCounter, (colBuffer.count / 3) * i));
+			slots.Add(new bufferSlot(null, updateCounter, (pointBuffer.count / 3) * i));
 
 		initialized = true;
 		}
@@ -89,24 +100,42 @@ public static class ComputeBufferManager
 	internal static void downloadPointCloudAsync(bufferSlot slot)
 		{
 		slot.pc.downloading = true;
-		AsyncGPUReadback.Request(colBuffer, colBuffer.count / numSlots, slot.startIx, slot.pc.downloadPointCloudCallback);
+		AsyncGPUReadback.Request(pointBuffer, pointBuffer.count / numSlots, slot.startIx, slot.pc.downloadPointCloudCallback);
 		}
 
 	internal static void uploadPointCloud(bufferSlot slot, bool displayNormals)
 		{
-		vertBuffer.SetData(slot.pc.points, 0, slot.startIx, slot.pc.points.Length);
-		colBuffer.SetData(slot.pc.classification, 0, slot.startIx, slot.pc.classification.Length);
-		if (displayNormals)
-			normBuffer.SetData(slot.pc.normals, 0, slot.startIx, slot.pc.normals.Length);
+		// Points, cols and norms have same length
+		cbPoint[] points = new cbPoint[slot.pc.points.Length];
+		for (int i = 0; i < slot.pc.points.Length; i++)
+			{
+			points[i].vert = slot.pc.points[i];
+			points[i].col = slot.pc.colors[i];
+			if (slot.pc.normals != null) points[i].norm = slot.pc.normals[i];
+			points[i].classification = slot.pc.classification[i];
+			}
+
+		pointBuffer.SetData(points, 0, slot.startIx, points.Length);
+		}
+
+	/// <summary>
+	/// Uploads a color look up table (LUT) for label display colors
+	/// Maximum 32 colors
+	/// </summary>
+	/// <param name="colors"></param>
+	internal static void uploadLabelColors(Color[] colors)
+		{
+		// Colors are stored in the first 32 slots opf the data buffer
+		var len = colors.Length;
+		if (len > 32) len = 32; // Can max upload 32 colors
+		dataBuffer.SetData(colors, 0, 0, len);
 		}
 
 	internal static void dispose()
 		{
-		if (vertBuffer != null)
-			vertBuffer.Release();
-		if (normBuffer != null)
-			normBuffer.Release();
-		if (colBuffer != null)
-			colBuffer.Release();
+		if (pointBuffer != null)
+			pointBuffer.Release();
+		if (dataBuffer != null)
+			dataBuffer.Release();
 		}
 	}

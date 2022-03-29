@@ -30,7 +30,7 @@ public class EventHandler
 		else if (e == events.setlayer)
 			{
 			if (args.Length == 1)
-				{ StartScript.display.setMatEditCol((Color)args[0]); }
+				{ StartScript.display.setMatEditLayer((int)args[0]); }
 			}
 		else if (e == events.seteditpos)
 			{

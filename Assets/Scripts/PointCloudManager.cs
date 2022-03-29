@@ -100,27 +100,23 @@ public class PointCloudManager : MonoBehaviour
 	internal void setMatDefaults()
 		{
 		setMatDisplayRad(displayRadius);
-		setMatEditCol(Color.yellow);
 		setMatDisplayNormals(displayNormals);
-
-		if (StartScript.ui.layerDropdownDesktop != null)
-			setMatEditCol(UIManager.layerColors[StartScript.ui.layerDropdownDesktop.value]);
-		else
-			setMatEditCol(UIManager.layerColors[0]);
+		setMatEditLayer(0);
 		}
+
 	/// <summary>
 	/// Sets offset for compute buffers
 	/// </summary>
-	/// <param name="displayNormals"></param>
+	/// <param name="offset"></param>
 	internal void setMatCbOffset(int offset)
 		{
 		if (mr == null) return;
 		mr.material.SetFloat("_CbOffset", offset);
 		}
-	internal void setMatEditCol(Color col)
+	internal void setMatEditLayer(int layer)
 		{
 		if (mr == null) return;
-		mr.material.SetColor("_EditCol", col);
+		mr.material.SetInt("_CurLabel", layer);
 		}
 
 	internal void setMatEditPos(Vector3 pos)

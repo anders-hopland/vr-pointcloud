@@ -12,7 +12,7 @@ using System.IO;
 public class UIManager
 	{
 
-	internal static Color[] layerColors = new Color[]
+	internal static Color[] labelColors = new Color[]
 	{
 		Color.blue, // Person
 		Color.red, // Car
@@ -217,7 +217,7 @@ public class UIManager
 		layerDropdownDesktop.value = newIndex;
 		layerDropdownVr.value = newIndex;
 
-		EventHandler.registerEvent(EventHandler.events.setlayer, layerColors[newIndex]);
+		EventHandler.registerEvent(EventHandler.events.setlayer, newIndex);
 		}
 
 	internal void displayNormalsToggleCallback(bool val)
