@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -12,10 +13,26 @@ public class PointCloudObject
 	internal Vector3[] normals;
 	internal bool downloading;
 	internal string wantFileName; // File name top be used on async file write
+	internal Texture2D imageTex;
 
 	public PointCloudObject(LasFile file, bool calculateNormals)
 		{
 		this.file = file;
+
+		// Remove extension from filename
+		string extension = System.IO.Path.GetExtension(file.fullFileName);
+		string imgFileName = file.fullFileName.Remove(file.fullFileName.Length - extension.Length, extension.Length);
+
+		if (File.Exists(imgFileName + ".png")) imgFileName += ".png";
+		else if (File.Exists(imgFileName + ".jpg")) imgFileName += ".jpg";
+		else if (File.Exists(imgFileName + ".jpeg")) imgFileName += ".jpeg";
+
+		if (File.Exists(imgFileName))
+        {
+			var bytes = File.ReadAllBytes(imgFileName);
+			imageTex = new Texture2D(2, 2);
+			imageTex.LoadImage(bytes); // Resizing texture dimensions
+		}
 
 		if (calculateNormals)
 			calcNormals();

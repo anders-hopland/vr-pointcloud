@@ -54,9 +54,12 @@ public class UIManager
 		addListenerVrDesktop("NormalsToggle", "Toggle", (bool val) => { displayNormalsToggleCallback(val); });
 		addListenerVrDesktop("DisplayRoundPointsToggle", "Toggle", (bool val) => { displayRoundPointsToggleCallback(val); });
 		addListenerVrDesktop("DisplayFloorToggle", "Toggle", (bool val) => { StartScript.sceneFloor.SetActive(val); });
+		addListenerVrDesktop("DisplayImgCylToggle", "Toggle", (bool val) => { StartScript.imageCyl.SetActive(val); });
 		addListenerVrDesktop("LowerPointRadBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.decreasedisplayrad));
 		addListenerVrDesktop("HigherPointRadBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.increasedisplayrad));
-		}
+		addListenerVrDesktop("lowerImageSizeBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.decreaseimagerad));
+		addListenerVrDesktop("higherImageSizeBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.increaseimagerad));
+	}
 
 	private void addListenerVrDesktop(string name, string type, Action func)
 		{

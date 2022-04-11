@@ -14,6 +14,7 @@ public class StartScript : MonoBehaviour
 	internal static UIManager ui;
 	internal static GameObject sceneRoot;
 	internal static GameObject sceneFloor;
+	internal static GameObject imageCyl;
 	internal static float sceneRootScale = 1f;
 	internal static bool paused = false;
 	internal static bool displayNormals = false;
@@ -37,6 +38,7 @@ public class StartScript : MonoBehaviour
 		ui = new UIManager();
 		sceneRoot = GameObject.Find("SceneElemRoot");
 		sceneFloor = GameObject.Find("SceneFloor");
+		imageCyl = GameObject.Find("ImageCylinder");
 		ComputeBufferManager.init();
 		ComputeBufferManager.uploadLabelColors(UIManager.labelColors);
 		}
