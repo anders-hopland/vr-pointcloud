@@ -100,10 +100,12 @@ namespace Valve.VR.Extras
 			float dist = 5f;
 
 			Ray raycast = new Ray(transform.position, transform.forward);
-			RaycastHit hit;
-			bool bHit = Physics.Raycast(raycast, out hit, 999f, LayerMask.GetMask("VR_UI"));
+			RaycastHit vrUiHit;
+			bool buttonHit = Physics.Raycast(raycast, out vrUiHit, 999f, LayerMask.GetMask("VR_UI"));
+			RaycastHit vrMenuHit;
+			bool menuHit = Physics.Raycast(raycast, out vrMenuHit, 999f, LayerMask.GetMask("VR_UI_Menu"));
 
-			if (previousContact && previousContact != hit.transform)
+			if (previousContact && previousContact != vrUiHit.transform)
 				{
 				PointerEventArgs args = new PointerEventArgs();
 				args.fromInputSource = pose.inputSource;
@@ -113,23 +115,23 @@ namespace Valve.VR.Extras
 				OnPointerOut(args);
 				previousContact = null;
 				}
-			if (bHit && previousContact != hit.transform)
+			if (buttonHit && previousContact != vrUiHit.transform)
 				{
 				PointerEventArgs argsIn = new PointerEventArgs();
 				argsIn.fromInputSource = pose.inputSource;
-				argsIn.distance = hit.distance;
+				argsIn.distance = vrUiHit.distance;
 				argsIn.flags = 0;
-				argsIn.target = hit.transform;
+				argsIn.target = vrUiHit.transform;
 				OnPointerIn(argsIn);
-				previousContact = hit.transform;
+				previousContact = vrUiHit.transform;
 				}
-			if (!bHit)
+			if (!buttonHit)
 				{
 				previousContact = null;
 				}
-			if (bHit && hit.distance < 100f)
+			if (menuHit && vrMenuHit.distance < 100f)
 				{
-				dist = hit.distance;
+                dist = vrMenuHit.distance;
 				pointer.transform.localScale = new Vector3(thickness * 5f, thickness * 5f, dist);
 				pointer.GetComponent<MeshRenderer>().material.color = clickColor;
 				}
@@ -139,13 +141,13 @@ namespace Valve.VR.Extras
 				pointer.GetComponent<MeshRenderer>().material.color = color;
 				}
 
-			if (bHit && interactWithUI.GetStateUp(pose.inputSource))
+			if (buttonHit && interactWithUI.GetStateUp(pose.inputSource))
 				{
 				PointerEventArgs argsClick = new PointerEventArgs();
 				argsClick.fromInputSource = pose.inputSource;
-				argsClick.distance = hit.distance;
+				argsClick.distance = vrUiHit.distance;
 				argsClick.flags = 0;
-				argsClick.target = hit.transform;
+				argsClick.target = vrUiHit.transform;
 				OnPointerClick(argsClick);
 				}
 

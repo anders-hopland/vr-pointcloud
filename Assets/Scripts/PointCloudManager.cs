@@ -130,7 +130,6 @@ public class PointCloudManager : MonoBehaviour
         if (mr == null) return;
         mr.material.SetInt ("_CurLabel", layer);
         }
-
     internal void setMatEditPos (Vector3 pos)
         {
         if (mr == null) return;
@@ -169,19 +168,23 @@ public class PointCloudManager : MonoBehaviour
     internal void increaseImageRad ()
         {
         if (imageCylRad < 0) imageCylRad = StartScript.imageCyl.transform.localScale.x;
+        float prevRad = imageCylRad;
         imageCylRad *= displayRadStepSize;
+        float radChange = imageCylRad - prevRad;
         StartScript.imageCyl.transform.localScale *= displayRadStepSize;
         var newImageCylPos = StartScript.imageCyl.transform.localPosition;
-        newImageCylPos.z = imageCylRad * 0.01f;
+        newImageCylPos.z += radChange * 0.01f;
         StartScript.imageCyl.transform.localPosition = newImageCylPos;
         }
     internal void decreaseImageRad ()
         {
         if (imageCylRad < 0) imageCylRad = StartScript.imageCyl.transform.localScale.x;
+        float prevRad = imageCylRad;
         imageCylRad *= (1f / displayRadStepSize);
+        float radChange = prevRad - imageCylRad;
         StartScript.imageCyl.transform.localScale *= (1f / displayRadStepSize);
         var newImageCylPos = StartScript.imageCyl.transform.localPosition;
-        newImageCylPos.z = imageCylRad * 0.01f;
+        newImageCylPos.z -= radChange * 0.01f;
         StartScript.imageCyl.transform.localPosition = newImageCylPos;
         }
     internal void setMatDisplayNormals (bool displayNormals)
