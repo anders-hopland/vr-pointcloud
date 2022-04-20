@@ -96,6 +96,7 @@ public class PointCloudManager : MonoBehaviour
 
         StartScript.imageCyl.transform.parent = this.transform;
         StartScript.imageCyl.transform.localPosition = new Vector3(0, 0, -1);
+        StartScript.imageCyl.transform.localRotation = Quaternion.identity;
         if (pc.imageTex != null)
             {
             StartScript.imageCyl.GetComponent<MeshRenderer> ().material.mainTexture = pc.imageTex;
