@@ -225,6 +225,7 @@ public class UIManager
 
 	internal void displayNormalsToggleCallback(bool val)
 		{
+        if (val) StartScript.display.uploadPointNormals ();
 		StartScript.displayNormals = val;
 		}
 

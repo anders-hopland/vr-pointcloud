@@ -79,7 +79,7 @@
 					v2f o;
 					int ix = v.ix / 4 + _CbOffset; // 4 vertices per quad
 					float radius = _DisplayRadius;
-					float4 position = v.vertex;
+					float4 position = float4(pointBuf[ix].vert.xyz, 0);
 
 					// Choose color based on display mode
 					if (_Displaymode == 0)
@@ -196,7 +196,7 @@
 
 					// Fake lighting mask
 					float4 mask = tex2D(_MainTex, i.uv);
-					//col *= mask.x;
+					col *= mask.x;
 					return col;
 				}
 			ENDCG

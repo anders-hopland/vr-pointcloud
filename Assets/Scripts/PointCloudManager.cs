@@ -43,11 +43,11 @@ public class PointCloudManager : MonoBehaviour
         display.displayNormals = StartScript.displayNormals;
         display.setFile (pointClouds);
 
-        //StartScript.sceneFloor.transform.position = new Vector3 (
-        //    (float)(pointClouds[0].file.header.maxX + pointClouds[0].file.header.minX) / 2f,
-        //    (float)(pointClouds[0].file.header.maxY + pointClouds[0].file.header.minY) / 2f,
-        //    (float)pointClouds[0].file.header.minZ
-        //    );
+        StartScript.sceneFloor.transform.position = new Vector3 (
+            (float)(pointClouds[0].file.header.maxX + pointClouds[0].file.header.minX) / 2f,
+            (float)(pointClouds[0].file.header.maxY + pointClouds[0].file.header.minY) / 2f,
+            (float)pointClouds[0].file.header.minZ
+            );
 
         return display;
         }
@@ -81,14 +81,6 @@ public class PointCloudManager : MonoBehaviour
         {
         init ();
 
-        //if (indices == null || indices.Length < pc.file.points.Length)
-        //    {
-        //    indices = new int[(int)(pc.file.points.Length * 1.25f) * 4];
-        //    verts = new Vector3[indices.Length]; // No need to initialize vertices
-        //    for (int i = 0; i < indices.Length; i++)
-        //        { indices[i] = i; }
-        //    }
-
         verts = new Vector3[pc.file.points.Length * 4];
         tris = new int[pc.file.points.Length * 6];
 
@@ -114,8 +106,6 @@ public class PointCloudManager : MonoBehaviour
         mf.mesh.indexFormat = IndexFormat.UInt32;
         mf.mesh.SetVertices (verts, 0, pc.file.points.Length * 4);
         mf.mesh.SetTriangles (tris, 0);
-        //mf.mesh.SetIndices (indices, 0, pc.file.points.Length * 4, MeshTopology.Points, 0);
-        //mf.mesh.bounds = new Bounds (Vector3.zero, Vector3.one * 99999f); // To prevent frustum culling, as we only have dummy vertices on mesh
 
         StartScript.imageCyl.transform.parent = this.transform;
         StartScript.imageCyl.transform.localPosition = new Vector3(0, 0, -1);
@@ -138,6 +128,14 @@ public class PointCloudManager : MonoBehaviour
         setMatDisplayRad (displayRadius);
         setMatDisplayNormals (displayNormals);
         setMatEditLayer (0);
+        }
+
+    internal void uploadPointNormals()
+        {
+        if (files[curtFileIx].normals == null)
+            files[curtFileIx].calcNormals ();
+
+        ComputeBufferManager.uploadNormal (files[curtFileIx]);
         }
 
     /// <summary>

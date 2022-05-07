@@ -17,8 +17,22 @@ public class StartScript : MonoBehaviour
 	internal static GameObject imageCyl;
 	internal static float sceneRootScale = 1f;
 	internal static bool paused = false;
-	internal static bool displayNormals = false;
-	internal static bool _displayRoundPoints = false;
+	internal static bool _displayNormals = false;
+    internal static bool displayNormals
+        {
+        get
+            {
+            return _displayNormals;
+            }
+        set
+            {
+            _displayNormals = value;
+            if (display != null)
+                display.setMatDisplayNormals (value);
+            }
+        }
+
+    internal static bool _displayRoundPoints = false;
 	internal static bool displayRoundPoints
 		{
 		get

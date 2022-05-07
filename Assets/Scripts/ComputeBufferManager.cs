@@ -22,12 +22,14 @@ public static class ComputeBufferManager
 		public PointCloudObject pc;
 		public int lastUpdate;
 		public int startIx;
+        public bool hasNormals;
 
 		public bufferSlot(PointCloudObject pc, int lastUpdate, int startIx)
 			{
 			this.pc = pc;
 			this.lastUpdate = lastUpdate;
 			this.startIx = startIx;
+            this.hasNormals = false;
 			}
 		}
 
@@ -108,6 +110,18 @@ public static class ComputeBufferManager
 		return cbOffset;
 		}
 
+    /// <summary>
+    /// Uploads normals
+    /// </summary>
+    internal static void uploadNormal(PointCloudObject pc)
+        {
+        bufferSlot slot = null;
+        foreach(var s in slots)
+            if (s.pc == pc)
+                { slot = s; break; }
+        if (slot != null && !slot.hasNormals) uploadPointCloud (slot, true);
+        }
+
 	/// <summary>
 	/// Checks if point cloud has uncommitted data on GPU, returns true if download 
 	/// must be done, where it downloads and saves on download completion, if ready
@@ -147,10 +161,11 @@ public static class ComputeBufferManager
 			{
 			cbPoints[i].vert = slot.pc.file.points[i].xyz;
 			cbPoints[i].col = slot.pc.file.points[i].col;
-			if (slot.pc.normals != null) cbPoints[i].norm = slot.pc.normals[i];
+			if (displayNormals) cbPoints[i].norm = slot.pc.normals[i];
 			cbPoints[i].classification = (int)slot.pc.file.points[i].classification;
 			}
 
+        slot.hasNormals = displayNormals;
 		pointBuffer.SetData(cbPoints, 0, slot.startIx, cbPoints.Length);
 		}
 
