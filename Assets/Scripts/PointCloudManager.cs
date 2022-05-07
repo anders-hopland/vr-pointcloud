@@ -37,7 +37,7 @@ public class PointCloudManager : MonoBehaviour
         go.AddComponent<PointCloudManager> ();
         go.AddComponent<MeshFilter> ();
         go.AddComponent<MeshRenderer> ();
-        go.GetComponent<MeshRenderer> ().material = new Material (Shader.Find ("Custom/PointCloudShader"));
+        go.GetComponent<MeshRenderer> ().material = Resources.Load ("Materials/PointCloudMat") as Material;
         go.transform.parent = StartScript.sceneRoot.transform;
         var display = go.GetComponent<PointCloudManager> ();
         display.displayNormals = StartScript.displayNormals;
