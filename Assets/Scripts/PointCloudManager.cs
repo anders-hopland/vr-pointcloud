@@ -43,11 +43,11 @@ public class PointCloudManager : MonoBehaviour
         display.displayNormals = StartScript.displayNormals;
         display.setFile (pointClouds);
 
-        StartScript.sceneFloor.transform.position = new Vector3 (
-            (float)(pointClouds[0].file.header.maxX + pointClouds[0].file.header.minX) / 2f,
-            (float)(pointClouds[0].file.header.maxY + pointClouds[0].file.header.minY) / 2f,
-            (float)pointClouds[0].file.header.minZ
-            );
+        //StartScript.sceneFloor.transform.position = new Vector3 (
+        //    (float)(pointClouds[0].file.header.maxX + pointClouds[0].file.header.minX) / 2f,
+        //    (float)(pointClouds[0].file.header.maxY + pointClouds[0].file.header.minY) / 2f,
+        //    (float)pointClouds[0].file.header.minZ
+        //    );
 
         return display;
         }
@@ -74,25 +74,48 @@ public class PointCloudManager : MonoBehaviour
         }
 
     // Work arrays for pushing data to GPU
-    internal static Vector3[] vertices;
+    internal static Vector3[] verts;
+    internal static int[] tris;
     internal static int[] indices;
     internal void setPointCloud (PointCloudObject pc)
         {
         init ();
 
-        if (indices == null || indices.Length < pc.file.points.Length)
+        //if (indices == null || indices.Length < pc.file.points.Length)
+        //    {
+        //    indices = new int[(int)(pc.file.points.Length * 1.25f) * 4];
+        //    verts = new Vector3[indices.Length]; // No need to initialize vertices
+        //    for (int i = 0; i < indices.Length; i++)
+        //        { indices[i] = i; }
+        //    }
+
+        verts = new Vector3[pc.file.points.Length * 4];
+        tris = new int[pc.file.points.Length * 6];
+
+        for (int i = 0; i < pc.file.points.Length; i++)
             {
-            indices = new int[(int)(pc.file.points.Length * 1.25f)];
-            vertices = new Vector3[indices.Length]; // No need to initialize vertices
-            for (int i = 0; i < indices.Length; i++)
-                { indices[i] = i; }
+            verts[i * 4] = pc.file.points[i].xyz;
+            verts[i * 4 + 1] = pc.file.points[i].xyz;
+            verts[i * 4 + 2] = pc.file.points[i].xyz;
+            verts[i * 4 + 3] = pc.file.points[i].xyz;
+            }
+
+        for (int i = 0; i < pc.file.points.Length; i++)
+            {
+            tris[i * 6] = i * 4 + 1;
+            tris[i * 6 + 1] = i * 4 + 2;
+            tris[i * 6 + 2] = i * 4 + 0;
+            tris[i * 6 + 3] = i * 4 + 1;
+            tris[i * 6 + 4] = i * 4 + 3;
+            tris[i * 6 + 5] = i * 4 + 2;
             }
 
         setMatDefaults ();
         mf.mesh.indexFormat = IndexFormat.UInt32;
-        mf.mesh.SetVertices (vertices, 0, pc.file.points.Length);
-        mf.mesh.SetIndices (indices, 0, pc.file.points.Length, MeshTopology.Points, 0);
-        mf.mesh.bounds = new Bounds (Vector3.zero, Vector3.one * 99999f); // To prevent frustum culling, as we only have dummy vertices on mesh
+        mf.mesh.SetVertices (verts, 0, pc.file.points.Length * 4);
+        mf.mesh.SetTriangles (tris, 0);
+        //mf.mesh.SetIndices (indices, 0, pc.file.points.Length * 4, MeshTopology.Points, 0);
+        //mf.mesh.bounds = new Bounds (Vector3.zero, Vector3.one * 99999f); // To prevent frustum culling, as we only have dummy vertices on mesh
 
         StartScript.imageCyl.transform.parent = this.transform;
         StartScript.imageCyl.transform.localPosition = new Vector3(0, 0, -1);

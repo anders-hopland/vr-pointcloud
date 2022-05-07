@@ -22,13 +22,16 @@
 	}
 		SubShader
 		{
+			ZTest LEqual 
+			ZWrite On
 			CGINCLUDE
 				#pragma target 5.0
 				#include "UnityCG.cginc"
 				#include "Autolight.cginc"
+			
 
 				struct pointStruct {
-					float3 vert;
+					float3 vert; // Only used in geom shader
 					float3 norm;
 					float4 col;
 					int classification;
@@ -37,27 +40,23 @@
 				struct appdata
 				{
 					uint ix : SV_VertexID;
+					float4 vertex : POSITION;
 				};
-				// Vertex to geometry
-				struct v2g
+
+				// Vertex to fragment
+				struct v2f
 				{
 					float4 vertex : POSITION;
 					float4 normal : NORMAL;
 					float4 col : COLOR;
-				};
-				// Geometry to fragment
-				struct g2f
-				{
-					float4 vertex : SV_POSITION;
-					float4 col : COLOR;
 					float2 uv : TEXCOORD0;
 				};
-
 
 				uniform RWStructuredBuffer<pointStruct> pointBuf : register(u1);
 				uniform RWStructuredBuffer<float4> dataBuf : register(u2);
 
 				sampler2D _MainTex;
+
 				int _TriggerPress;
 				int _DisplayNormals;
 				int _DisplayRoundPoints;
@@ -75,14 +74,13 @@
 				float4 _HeightCol1;
 				float4 _HeightCol2;
 
-				v2g vert(appdata v)
+				v2f vert(appdata v)
 				{
-					v2g o;
-					int ix = v.ix + _CbOffset;
-					float4 position = float4(pointBuf[ix].vert.xyz, 0);
-					o.vertex = position;
+					v2f o;
+					int ix = v.ix / 4 + _CbOffset; // 4 vertices per quad
+					float radius = _DisplayRadius;
+					float4 position = v.vertex;
 
-					o.normal = float4(pointBuf[ix].norm.xyz, 0);
 					// Choose color based on display mode
 					if (_Displaymode == 0)
 					{
@@ -116,105 +114,102 @@
 						o.col = lerp(_HeightCol1, _HeightCol2, heightLerpFac);
 					}
 
-					return o;
-				}
-				[maxvertexcount(6)]
-				void geom(point v2g input[1], inout TriangleStream<g2f> triStream)
-				{
-					g2f v1;
-					g2f v2;
-					g2f v3;
-					g2f v4;
-
-					float radius = _DisplayRadius;
-					float4 normal = input[0].normal;
+					float4 normal = float4(pointBuf[ix].norm.xyz, 0);
 
 					if (_DisplayNormals == 0)
 					{
-						float4 base = UnityObjectToClipPos(input[0].vertex);
-
-						// Should fix normals later
-						v1.vertex = base + float4(-radius, -radius, 0, 0);
-						v2.vertex = base + float4(radius, -radius, 0, 0);
-						v3.vertex = base + float4(-radius, radius, 0, 0);
-						v4.vertex = base + float4(radius, radius, 0, 0);
+						position = UnityObjectToClipPos(position);
+						if (v.ix % 4 == 0)
+						{
+							o.vertex = position + float4(-radius, -radius, 0, 0); o.uv = float2(0, 0);
+						}
+						if (v.ix % 4 == 1)
+						{
+							o.vertex = position + float4(radius, -radius, 0, 0); o.uv = float2(0, 1);
+						}
+						if (v.ix % 4 == 2)
+						{
+							o.vertex = position + float4(-radius, radius, 0, 0); o.uv = float2(1, 0);
+						}
+						if (v.ix % 4 == 3)
+						{
+							o.vertex = position + float4(radius, radius, 0, 0); o.uv = float2(1, 1);
+						}
 					}
-					else
+					else 
 					{
-						float4 base = input[0].vertex;
 						float3 right = normalize(cross(normal.xyz, float3(0, 1, 0)));
 						float3 up = cross(right, normal);
 
 						right *= radius;
 						up *= radius;
 
-						v1.vertex = base - float4(right.xyz, 0) - float4(up.xyz, 0);
-						v2.vertex = base + float4(right.xyz, 0) - float4(up.xyz, 0);
-						v3.vertex = base - float4(right.xyz, 0) + float4(up.xyz, 0);
-						v4.vertex = base + float4(right.xyz, 0) + float4(up.xyz, 0);
-
-						v1.vertex = UnityObjectToClipPos(v1.vertex);
-						v2.vertex = UnityObjectToClipPos(v2.vertex);
-						v3.vertex = UnityObjectToClipPos(v3.vertex);
-						v4.vertex = UnityObjectToClipPos(v4.vertex);
+						if (v.ix % 4 == 0)
+						{
+							o.vertex = position - float4(right.xyz, 0) - float4(up.xyz, 0);
+							o.vertex = UnityObjectToClipPos(o.vertex);
+							o.uv = float2(0, 0);
+						}
+						if (v.ix % 4 == 1)
+						{
+							o.vertex = position + float4(right.xyz, 0) - float4(up.xyz, 0);
+							o.vertex = UnityObjectToClipPos(o.vertex);
+							o.uv = float2(0, 1);
+						}
+						if (v.ix % 4 == 2)
+						{
+							o.vertex = position - float4(right.xyz, 0) + float4(up.xyz, 0);
+							o.vertex = UnityObjectToClipPos(o.vertex);
+							o.uv = float2(1, 0);
+						}
+						if (v.ix % 4 == 3)
+						{
+							o.vertex = position + float4(right.xyz, 0) + float4(up.xyz, 0);
+							o.vertex = UnityObjectToClipPos(o.vertex);
+							o.uv = float2(1, 1);
+						}
 					}
-
-					v1.col = input[0].col;
-					v2.col = input[0].col;
-					v3.col = input[0].col;
-					v4.col = input[0].col;
-
-					v1.uv = float2(0, 0);
-					v2.uv = float2(1, 0);
-					v3.uv = float2(0, 1);
-					v4.uv = float2(1, 1);
-
-					// Add output geom
-					triStream.Append(v2);
-					triStream.Append(v3);
-					triStream.Append(v1);
-					triStream.RestartStrip();
-
-					triStream.Append(v2);
-					triStream.Append(v4);
-					triStream.Append(v3);
-					triStream.RestartStrip();
+					return o;
 				}
 
-				fixed4 frag(g2f i) : SV_Target
+				fixed4 frag(v2f i) : SV_Target
 				{
 					float4 col = i.col;
 
-					if (_DisplayRoundPoints)
+					float x = i.uv.x;
+					float y = i.uv.y;
+
+					if (_DisplayRoundPoints == 1)
 					{
-						float x = i.uv.x;
-						float y = i.uv.y;
 						float dist = sqrt(pow((0.5 - x), 2) + pow((0.5 - y), 2));
-						if (dist > 0.5) {
-							discard;
-						}
-						else {
-							col = i.col;
-						}
+						if (dist > 0.5) { discard; }
+
+						// Black outline around circle
+						//if (dist > 0.42) { col = float4(0, 0, 0, 0); }
+					}
+					else
+					{
+						// Black outline around quad
+						if (x < 0.06 || x > 0.94 || y < 0.06 || y > 0.94)
+							{ col = float4(0, 0, 0, 0); }
 					}
 
+					// Fake lighting mask
+					float4 mask = tex2D(_MainTex, i.uv);
+					//col *= mask.x;
 					return col;
 				}
 			ENDCG
 
 			Pass
 			{
-				Tags { "RenderType" = "Opaque" "LightMode" = "ForwardBase"}
+				Tags { "RenderType" = "Opaque"}
 				LOD 100
 				CGPROGRAM
 				#pragma vertex vert
-				#pragma geometry geom
+				//#pragma geometry geom
 				#pragma fragment frag
-					//#pragma multi_compile_fog
-					//#pragma multi_compile_fwdbase
-					//#pragma shader_feature IS_LIT
-
-					ENDCG
-					}
+				ENDCG
+				}
 		}
 }

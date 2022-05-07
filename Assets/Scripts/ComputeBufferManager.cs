@@ -13,7 +13,7 @@ public static class ComputeBufferManager
 	internal static int updateCounter = -1;
 	internal static int numSlots = 3;
 	internal static int cbPointSize = UnsafeUtility.SizeOf<cbPoint>();
-	internal static int numElemsPerSlot = 1000000; // Not dynamic for now, as we only work with small point clouds for now
+	internal static int numElemsPerSlot = 750000; // Not dynamic for now, as we only work with small point clouds for now
 	internal static List<bufferSlot> slots;
 	internal static Vector4[] data;
 	private static bool initialized;
@@ -44,20 +44,31 @@ public static class ComputeBufferManager
 		{
 		if (initialized) return;
 
-		pointBuffer = new ComputeBuffer(numSlots * numElemsPerSlot, cbPointSize); // 4 bytes per float, 3 floats		
-		Graphics.SetRandomWriteTarget(1, pointBuffer);
+		slots = new List<bufferSlot>();
+        resizePointBuffer (numElemsPerSlot);
 
 		// Buffer for various data
 		data = new Vector4[1024];
 		dataBuffer = new ComputeBuffer(1024, sizeof(float) * 4);
 		Graphics.SetRandomWriteTarget(2, dataBuffer);
 
-		slots = new List<bufferSlot>();
 		for (int i = 0; i < numSlots; i++)
 			slots.Add(new bufferSlot(null, updateCounter, (pointBuffer.count / 3) * i));
 
 		initialized = true;
 		}
+
+    internal static void resizePointBuffer(int numElemsPerSlot)
+        {
+        if (pointBuffer != null) pointBuffer.Dispose ();
+
+        pointBuffer = new ComputeBuffer (numSlots * numElemsPerSlot, cbPointSize); // 4 bytes per float, 3 floats		
+        Graphics.SetRandomWriteTarget (1, pointBuffer);
+
+        slots.Clear ();
+        for (int i = 0; i < numSlots; i++)
+            slots.Add (new bufferSlot (null, updateCounter, (pointBuffer.count / 3) * i));
+        }
 
 	internal static int setPointCloud(PointCloudObject pc, bool displayNormals)
 		{
@@ -126,6 +137,12 @@ public static class ComputeBufferManager
 		{
 		// Points, cols and norms have same length
 		cbPoint[] cbPoints = new cbPoint[slot.pc.file.points.Length];
+
+        if (pointBuffer.count < cbPoints.Length * 3)
+            {
+            resizePointBuffer ((int)(cbPoints.Length * 1.25f / 3));
+            }
+
 		for (int i = 0; i < slot.pc.file.points.Length; i++)
 			{
 			cbPoints[i].vert = slot.pc.file.points[i].xyz;

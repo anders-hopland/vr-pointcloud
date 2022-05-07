@@ -186,9 +186,9 @@ public class LasReader
 		point.pointSourceId = BitConverter.ToUInt16(bytes, 18);
 
 		point.col = new UnityEngine.Color(
-			BitConverter.ToUInt16(bytes, 20),
-			BitConverter.ToUInt16(bytes, 22),
-			BitConverter.ToUInt16(bytes, 24)
+			BitConverter.ToUInt16(bytes, 20) / (256f * 256f),
+			BitConverter.ToUInt16(bytes, 22) / (256f * 256f),
+			BitConverter.ToUInt16(bytes, 24) / (256f * 256f)
 			);
 
 		return point;
@@ -216,9 +216,9 @@ public class LasReader
 
 
 		point.col = new UnityEngine.Color(
-			BitConverter.ToUInt16(bytes, 28),
-			BitConverter.ToUInt16(bytes, 30),
-			BitConverter.ToUInt16(bytes, 32)
+			BitConverter.ToUInt16(bytes, 28) / (256f * 256f),
+			BitConverter.ToUInt16(bytes, 30) / (256f * 256f),
+			BitConverter.ToUInt16(bytes, 32) / (256f * 256f)
 			);
 
 		return point;
