@@ -9,6 +9,7 @@ public class EventHandler
         prev,
         next,
         setlayer,
+        setdisplaymode,
         settriggerpress,
         seteditpos,
         seteditradius,
@@ -34,6 +35,11 @@ public class EventHandler
             {
             if (args.Length == 1)
                 { StartScript.display.setMatEditLayer ((int)args[0]); }
+            }
+        else if (e == events.setdisplaymode)
+            {
+            if (args.Length == 1)
+                { StartScript.display.setMatDisplayMode ((int)args[0]); }
             }
         else if (e == events.seteditpos)
             {

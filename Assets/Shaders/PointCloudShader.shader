@@ -84,11 +84,6 @@
 					// Choose color based on display mode
 					if (_Displaymode == 0)
 					{
-						// Original rgb color
-						o.col = pointBuf[ix].col;
-					}
-					else if (_Displaymode == 1)
-					{
 						// Classification
 						// Paint / hover / mark point cloud
 						if (distance(position.xyz, _EditPos.xyz) < _EditRadius) {
@@ -106,6 +101,11 @@
 						{
 							o.col = dataBuf[pointBuf[ix].classification];
 						}
+					}		
+					else if (_Displaymode == 1)
+					{
+						// Original rgb color
+						o.col = pointBuf[ix].col;
 					}
 					else if (_Displaymode == 2)
 					{
@@ -185,7 +185,7 @@
 						if (dist > 0.5) { discard; }
 
 						// Black outline around circle
-						//if (dist > 0.42) { col = float4(0, 0, 0, 0); }
+						if (dist > 0.42) { col = float4(0, 0, 0, 0); }
 					}
 					else
 					{

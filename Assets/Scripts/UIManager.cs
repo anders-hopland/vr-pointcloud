@@ -27,6 +27,8 @@ public class UIManager
 
 	internal Dropdown layerDropdownDesktop;
 	internal Dropdown layerDropdownVr;
+	internal Dropdown displayModeDropdownDesktop;
+	internal Dropdown displayModeDropdownVr;
 	internal GameObject vrMenuRoot;
 	internal GameObject desktopMenuRoot;
 	public UIManager()
@@ -42,7 +44,9 @@ public class UIManager
 		{
 		layerDropdownDesktop = (Dropdown)Helpers.findGameObjectComponent(desktopMenuRoot, "Dropdown", "LayerDropdown");
 		layerDropdownVr = (Dropdown)Helpers.findGameObjectComponent(vrMenuRoot, "Dropdown", "LayerDropdown");
-		}
+        displayModeDropdownDesktop = (Dropdown)Helpers.findGameObjectComponent (desktopMenuRoot, "Dropdown", "DisplayModeDropdown");
+        displayModeDropdownVr = (Dropdown)Helpers.findGameObjectComponent (vrMenuRoot, "Dropdown", "DisplayModeDropdown");
+        }
 	internal void registerCallBacks()
 		{
 		addListenerVrDesktop("ExitProgramButton", "Button", () => quitApplicationCallback());
@@ -51,6 +55,7 @@ public class UIManager
 		addListenerVrDesktop("PrevPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.prev));
 		addListenerVrDesktop("NextPointcloudBtn", "Button", () => EventHandler.registerEvent(EventHandler.events.next));
 		addListenerVrDesktop("LayerDropdown", "Dropdown", (int newIndex) => layerDropdownCallback(newIndex));
+		addListenerVrDesktop("DisplayModeDropdown", "Dropdown", (int newIndex) => displayModeDropdownCallback(newIndex));
 		addListenerVrDesktop("NormalsToggle", "Toggle", (bool val) => { displayNormalsToggleCallback(val); });
 		addListenerVrDesktop("DisplayRoundPointsToggle", "Toggle", (bool val) => { displayRoundPointsToggleCallback(val); });
 		addListenerVrDesktop("DisplayFloorToggle", "Toggle", (bool val) => { StartScript.sceneFloor.SetActive(val); });
@@ -223,7 +228,16 @@ public class UIManager
 		EventHandler.registerEvent(EventHandler.events.setlayer, newIndex);
 		}
 
-	internal void displayNormalsToggleCallback(bool val)
+    internal void displayModeDropdownCallback (int newIndex)
+        {
+        // Sync both menu elements
+        displayModeDropdownDesktop.value = newIndex;
+        displayModeDropdownVr.value = newIndex;
+
+        EventHandler.registerEvent (EventHandler.events.setdisplaymode, newIndex);
+        }
+
+    internal void displayNormalsToggleCallback(bool val)
 		{
         if (val) StartScript.display.uploadPointNormals ();
 		StartScript.displayNormals = val;

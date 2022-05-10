@@ -16,7 +16,7 @@ public class PointCloudManager : MonoBehaviour
     internal int curtFileIx;
     internal bool displayNormals;
     internal bool displayRoundPoints;
-    internal float displayRadius = 0.015f;
+    internal float displayRadius = 0.1f;
     internal float imageCylRad = -1f;
     internal bool initialized;
 
@@ -151,6 +151,11 @@ public class PointCloudManager : MonoBehaviour
         {
         if (mr == null) return;
         mr.material.SetInt ("_CurLabel", layer);
+        }
+    internal void setMatDisplayMode (int displaymode)
+        {
+        if (mr == null) return;
+        mr.material.SetInt ("_Displaymode", displaymode);
         }
     internal void setMatEditPos (Vector3 pos)
         {
