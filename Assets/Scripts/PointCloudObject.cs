@@ -147,7 +147,6 @@ public class PointCloudObject
 				file.points[i].classification = (byte)data[i].classification;
 
 			downloading = false;
-
 			}
 		}
 

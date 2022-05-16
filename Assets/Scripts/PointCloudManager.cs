@@ -16,7 +16,7 @@ public class PointCloudManager : MonoBehaviour
     internal int curtFileIx;
     internal bool displayNormals;
     internal bool displayRoundPoints;
-    internal float displayRadius = 0.1f;
+    internal float displayRadius = 0.03f;
     internal float imageCylRad = -1f;
     internal bool initialized;
 
@@ -109,7 +109,7 @@ public class PointCloudManager : MonoBehaviour
 
         StartScript.imageCyl.transform.parent = this.transform;
         StartScript.imageCyl.transform.localPosition = new Vector3(0, 0, -1);
-        StartScript.imageCyl.transform.localRotation = Quaternion.identity;
+        StartScript.imageCyl.transform.localRotation = Quaternion.Euler(0, 0, 40);
         if (pc.imageTex != null)
             {
             StartScript.imageCyl.GetComponent<MeshRenderer> ().material.mainTexture = pc.imageTex;
@@ -195,23 +195,25 @@ public class PointCloudManager : MonoBehaviour
     internal void increaseImageRad ()
         {
         if (imageCylRad < 0) imageCylRad = StartScript.imageCyl.transform.localScale.x;
+        float scaleZFactor = StartScript.imageCyl.transform.localScale.z / StartScript.imageCyl.transform.localScale.x;
         float prevRad = imageCylRad;
         imageCylRad *= displayRadStepSize;
         float radChange = imageCylRad - prevRad;
         StartScript.imageCyl.transform.localScale *= displayRadStepSize;
         var newImageCylPos = StartScript.imageCyl.transform.localPosition;
-        newImageCylPos.z += radChange * 0.01f;
+        newImageCylPos.z += radChange * 0.01f * scaleZFactor;
         StartScript.imageCyl.transform.localPosition = newImageCylPos;
         }
     internal void decreaseImageRad ()
         {
         if (imageCylRad < 0) imageCylRad = StartScript.imageCyl.transform.localScale.x;
+        float scaleZFactor = StartScript.imageCyl.transform.localScale.z / StartScript.imageCyl.transform.localScale.x;
         float prevRad = imageCylRad;
         imageCylRad *= (1f / displayRadStepSize);
         float radChange = prevRad - imageCylRad;
         StartScript.imageCyl.transform.localScale *= (1f / displayRadStepSize);
         var newImageCylPos = StartScript.imageCyl.transform.localPosition;
-        newImageCylPos.z -= radChange * 0.01f;
+        newImageCylPos.z -= radChange * 0.01f * scaleZFactor;
         StartScript.imageCyl.transform.localPosition = newImageCylPos;
         }
     internal void setMatDisplayNormals (bool displayNormals)
